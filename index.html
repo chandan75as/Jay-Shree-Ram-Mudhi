@@ -3,122 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mudhi Mill Premium Manager</title>
+    <title>Jay Shree Ram Mudhi Mill</title>
     <style>
+        /* Define Color Palette - Strictly No White */
         :root {
-            --premium-red: #8B0000;
-            --gold: #D4AF37;
-            --light-bg: #fffbf0;
+            --bg-golden: linear-gradient(135deg, #f8d568 0%, #d4af37 100%); /* Premium Golden Gradient */
+            --bhagwa-saffron: #FF9933; /* Rich Bhagwa */
+            --premium-red: #C11B17; /* Deep Premium Red */
+            --text-golden: #D4AF37; /* Metallic Gold Text */
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light-bg); margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 8px solid var(--premium-red); }
-        
-        h2 { text-align: center; color: var(--premium-red); text-transform: uppercase; letter-spacing: 2px; }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .full-width { grid-column: span 2; }
-        
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.5); }
-        
-        button { width: 100%; padding: 15px; background-color: var(--premium-red); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; border-bottom: 4px solid #5a0000; }
-        button:hover { background-color: #a50000; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            height: 100vh; 
+            background: var(--bg-golden); 
+            overflow: hidden; /* Prevent scrolling for the initial view */
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-        th { background-color: var(--premium-red); color: white; padding: 12px; text-align: left; }
-        td { border-bottom: 1px solid #ddd; padding: 12px; }
-        tr:hover { background-color: #fff9e6; }
-        
-        .delete-btn { background-color: #d9534f; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
-        
-        .summary-box { background: var(--gold); color: black; padding: 15px; text-align: right; font-size: 1.2em; font-weight: bold; border-radius: 6px; margin-top: 20px; }
+        /* Header Section */
+        .header-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .header-text {
+            color: var(--bhagwa-saffron);
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Arial Black', Gadget, sans-serif; /* Bold Font */
+        }
+
+        /* Action Button (Red 3D +) */
+        .action-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .add-button {
+            background-color: var(--premium-red);
+            color: var(--text-golden); /* Golden + symbol */
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 3rem;
+            font-weight: bold;
+            line-height: 60px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.3); /* 3D Effect */
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .add-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 70px; /* Just below the button */
+            right: 0;
+            background-color: var(--premium-red);
+            border: 2px solid var(--text-golden);
+            border-radius: 8px;
+            width: 160px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            padding: 5px 0;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dropdown-menu ul li {
+            color: var(--text-golden); /* Golden text */
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: bold;
+        }
+
+        .dropdown-menu ul li:hover {
+            background-color: var(--bhagwa-saffron);
+            color: var(--premium-red); /* Red text on hover */
+        }
+
+        /* Main Content Area (Initially Empty) */
+        .main-content {
+            margin-top: 100px; /* Spacing from header */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 100px);
+            color: var(--text-golden);
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Mudhi Mill Management</h2>
-    
-    <div class="form-grid">
-        <input type="text" id="name" placeholder="Customer Name">
-        <input type="text" id="phone" placeholder="Phone Number">
-        <input type="text" id="address" class="full-width" placeholder="Customer Address">
-        <input type="number" id="qty" placeholder="Quantity (Kg)">
-        <input type="number" id="rate" placeholder="Rate per Kg">
+    <!-- Header -->
+    <header class="header-container">
+        <h1 class="header-text">Jay Shree Ram Mudhi</h1>
+    </header>
+
+    <!-- Action Button and Dropdown -->
+    <div class="action-container">
+        <button class="add-button" onclick="toggleDropdown()">+</button>
+        <div id="actionDropdown" class="dropdown-menu">
+            <ul>
+                <li onclick="selectOption('Place')">Place</li>
+                <li onclick="selectOption('Costumer')">Costumer</li>
+                <!-- You can add more options here later -->
+            </ul>
+        </div>
     </div>
-    <button onclick="addEntry()">Add Entry to Records</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Total</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="salesBody"></tbody>
-    </table>
-    
-    <div class="summary-box" id="grandTotal">Grand Total: ₹0</div>
-</div>
+    <!-- Main Content (Empty) -->
+    <main class="main-content">
+        Records khali hain...
+    </main>
 
-<script>
-    function addEntry() {
-        const name = document.getElementById('name').value;
-        const phone = document.getElementById('phone').value;
-        const address = document.getElementById('address').value;
-        const qty = parseFloat(document.getElementById('qty').value);
-        const rate = parseFloat(document.getElementById('rate').value);
+    <script>
+        function toggleDropdown() {
+            const dropdown = document.getElementById('actionDropdown');
+            dropdown.classList.toggle('show');
+        }
 
-        if (!name || !qty || !rate) { alert("Please fill Name, Quantity, and Rate"); return; }
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.add-button')) {
+                const dropdown = document.getElementById('actionDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
 
-        const total = qty * rate;
-        const entry = { name, phone, address, qty, rate, total };
-
-        let data = JSON.parse(localStorage.getItem('mudhiData')) || [];
-        data.push(entry);
-        localStorage.setItem('mudhiData', JSON.stringify(data));
-        
-        renderTable();
-        // Clear fields
-        document.querySelectorAll('input').forEach(input => input.value = '');
-    }
-
-    function renderTable() {
-        const body = document.getElementById('salesBody');
-        const data = JSON.parse(localStorage.getItem('mudhiData')) || [];
-        body.innerHTML = '';
-        let grandTotal = 0;
-
-        data.forEach((item, index) => {
-            grandTotal += item.total;
-            body.innerHTML += `<tr>
-                <td>${item.name}</td>
-                <td>${item.phone}</td>
-                <td>${item.address}</td>
-                <td>${item.qty} kg</td>
-                <td>₹${item.rate}</td>
-                <td>₹${item.total}</td>
-                <td><button class="delete-btn" onclick="deleteEntry(${index})">X</button></td>
-            </tr>`;
-        });
-        document.getElementById('grandTotal').innerText = "Grand Total: ₹" + grandTotal;
-    }
-
-    function deleteEntry(index) {
-        let data = JSON.parse(localStorage.getItem('mudhiData'));
-        data.splice(index, 1);
-        localStorage.setItem('mudhiData', JSON.stringify(data));
-        renderTable();
-    }
-
-    window.onload = renderTable;
-</script>
+        function selectOption(option) {
+            alert("Aapne chuna: " + option);
+            // Yahan par aap naya page open kar sakte hain ya form dikha sakte hain.
+            toggleDropdown(); // Close dropdown after selection
+        }
+    </script>
 
 </body>
 </html>
