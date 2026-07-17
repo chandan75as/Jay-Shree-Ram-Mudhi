@@ -3,412 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jay Shree Ram Mudhi - Premium Manager</title>
+    <title>Jay Shree Ram Mudhi Manager</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400;600&display=swap');
-
-        /* Elegant Color Palette */
         :root {
-            --bg-maroon: #5E1914; /* Deep, rich maroon/red */
-            --bg-darker: #420f0b;
-            --gold-primary: #D4AF37; /* Muted elegant gold */
-            --gold-light: #F9E596;
-            --bhagwa-accent: #E46624; /* Classy saffron */
-            --text-light: #FDF7E3; /* Soft cream for reading */
+            --bg-maroon: #5E1914;
+            --gold: #D4AF37;
+            --white: #FDF7E3;
+            --active-bg: rgba(212, 175, 55, 0.2);
         }
 
-        body { 
-            margin: 0; 
-            padding: 0; 
-            background: radial-gradient(circle at top, var(--bg-maroon), var(--bg-darker));
-            font-family: 'Poppins', sans-serif;
-            color: var(--text-light);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; }
+        header { text-align: center; padding: 15px; border-bottom: 2px solid var(--gold); color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; }
 
-        /* Header with Traditional Font */
-        header {
-            text-align: center;
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-            background: rgba(0, 0, 0, 0.2);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
+        
+        /* Sidebar */
+        .sidebar { width: 80px; position: relative; }
+        .plus-btn { width: 60px; height: 60px; background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 50%; font-size: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .dropdown { display: none; position: absolute; left: 70px; top: 0; background: #333; border: 1px solid var(--gold); width: 180px; border-radius: 8px; z-index: 100; }
+        .dropdown a { display: block; padding: 12px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; }
+        .dropdown a:hover { background: var(--gold); color: var(--bg-maroon); }
 
-        header h1 {
-            margin: 0;
-            font-family: 'Cinzel', serif; /* Elegant serif font */
-            color: var(--gold-light);
-            font-size: 3rem;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
+        /* Grid */
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; flex: 1; }
+        .col { background: rgba(0,0,0,0.2); border: 1px solid var(--gold); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+        .col-title { padding: 12px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; border-bottom: 1px solid var(--gold); }
+        .list { flex: 1; overflow-y: auto; padding: 10px; }
+        .item { padding: 12px; margin-bottom: 5px; border: 1px solid transparent; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .item:hover { background: rgba(255,255,255,0.05); }
+        .item.active { background: var(--active-bg); border-color: var(--gold); color: var(--gold); }
+        
+        /* Details & Buttons */
+        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-weight: bold; }
+        .details-box { padding: 15px; font-size: 1.1rem; }
+        .d-row { margin-bottom: 10px; display: flex; justify-content: space-between; }
 
-        /* Layout Container */
-        .main-container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
-            position: relative;
-        }
-
-        /* Left Action Area (+ Button) */
-        .action-sidebar {
-            width: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
-        }
-
-        .add-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .add-btn {
-            background: linear-gradient(145deg, var(--gold-primary), #B28F2A);
-            color: var(--bg-maroon);
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 2.5rem;
-            line-height: 60px;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .add-dropdown:hover .add-btn {
-            transform: scale(1.05);
-            box-shadow: 3px 6px 15px rgba(0,0,0,0.5);
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            left: 70px; /* Appear to the right of the button */
-            top: 0;
-            background-color: var(--bg-maroon);
-            min-width: 150px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
-            border: 1px solid var(--gold-primary);
-            border-radius: 8px;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .add-dropdown:hover .dropdown-content {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .dropdown-content a {
-            color: var(--gold-light);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            font-size: 1.1rem;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            transition: background 0.2s;
-        }
-
-        .dropdown-content a:hover {
-            background-color: var(--bhagwa-accent);
-            color: white;
-        }
-
-        /* 3 Columns Dashboard */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.5fr; /* 3 columns */
-            gap: 20px;
-            flex: 1;
-        }
-
-        .col-card {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(212, 175, 55, 0.4);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
-        }
-
-        .col-header {
-            background: rgba(212, 175, 55, 0.1);
-            color: var(--bhagwa-accent);
-            text-align: center;
-            padding: 15px;
-            font-weight: 600;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .list-container {
-            padding: 10px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .list-item {
-            padding: 15px;
-            margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            border-left: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .list-item:hover, .list-item.active {
-            background: rgba(212, 175, 55, 0.15);
-            border-left: 3px solid var(--gold-primary);
-        }
-
-        /* Details Section specific styling */
-        .details-content {
-            padding: 20px;
-            display: none; /* Hidden initially */
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px dashed rgba(212, 175, 55, 0.3);
-        }
-
-        .d-label { color: var(--gold-primary); font-weight: 300; }
-        .d-value { font-weight: 600; }
-        .d-due { color: #FF6B6B; font-weight: bold; }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(253, 247, 227, 0.5);
-            font-style: italic;
-        }
-
-        /* Custom Scrollbar for list containers */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.5); border-radius: 3px; }
-
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-maroon); border: 2px solid var(--gold); padding: 25px; border-radius: 10px; width: 320px; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--gold); background: #333; color: white; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 10px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Jay Shree Ram Mudhi</h1>
-    </header>
+    <header>Jay Shree Ram Mudhi</header>
 
-    <div class="main-container">
-        
-        <!-- Action Sidebar -->
-        <div class="action-sidebar">
-            <div class="add-dropdown">
-                <button class="add-btn">+</button>
-                <div class="dropdown-content">
-                    <a href="#" onclick="addNewPlace()">Add Place</a>
-                    <a href="#" onclick="addNewCustomer()">Add Customer</a>
-                </div>
+    <div class="main-wrapper">
+        <div class="sidebar">
+            <button class="plus-btn" onclick="toggleMenu(event)">+</button>
+            <div id="dropdown" class="dropdown">
+                <a onclick="openModal('place')">Add Place</a>
+                <a onclick="openModal('customer')">Add Customer</a>
             </div>
         </div>
 
-        <!-- Dashboard Grid -->
-        <div class="dashboard-grid">
-            
-            <!-- Places Column -->
-            <div class="col-card">
-                <div class="col-header">Places</div>
-                <div class="list-container" id="placesList">
-                    <!-- Default places added for demo -->
-                    <div class="list-item" onclick="showCustomers('Bazaar')">📍 Main Bazaar</div>
-                    <div class="list-item" onclick="showCustomers('Station')">📍 Station Road</div>
-                </div>
-            </div>
-
-            <!-- Customers Column -->
-            <div class="col-card">
-                <div class="col-header">Customers</div>
-                <div class="list-container" id="customersList">
-                    <div class="empty-state">Select a place first</div>
-                </div>
-            </div>
-
-            <!-- Details Column -->
-            <div class="col-card">
-                <div class="col-header">Details</div>
-                <div class="list-container" id="detailsContainer">
-                    <div class="empty-state">Select a customer to view details</div>
-                    
-                    <!-- Hidden details template -->
-                    <div class="details-content" id="customerDetailsView">
-                        <h2 id="detName" style="color: var(--gold-light); margin-top: 0; text-align: center;">-</h2>
-                        <div class="detail-row">
-                            <span class="d-label">Last Purchase:</span>
-                            <span class="d-value" id="detDate">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="d-label">Product Details:</span>
-                            <span class="d-value" id="detProduct">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="d-label">Total Bill:</span>
-                            <span class="d-value">₹<span id="detTotal">0</span></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="d-label">Amount Paid:</span>
-                            <span class="d-value">₹<span id="detPaid">0</span></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="d-label">Balance (Baki):</span>
-                            <span class="d-due">₹<span id="detDue">0</span></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div class="grid">
+            <div class="col"><div class="col-title">Places</div><div class="list" id="placeList"></div></div>
+            <div class="col"><div class="col-title">Customers</div><div class="list" id="customerList"></div></div>
+            <div class="col"><div class="col-title">Details</div><div class="list" id="detailsBox"></div></div>
         </div>
     </div>
 
+    <div id="modal" class="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
     <script>
-        // --- Dummy Data Structure ---
-        // A simple way to map Places -> Customers -> Details
-        const dataStore = {
-            'Bazaar': [
-                { name: 'Ramesh Store', date: '15-07-2026', product: 'Mudhi Special (10 Bori)', total: 5000, paid: 3000, due: 2000 },
-                { name: 'Gupta Sweets', date: '16-07-2026', product: 'Regular Mudhi (5 Bori)', total: 2000, paid: 2000, due: 0 }
-            ],
-            'Station': [
-                { name: 'Verma Kirana', date: '17-07-2026', product: 'Mudhi Special (20 Bori)', total: 10000, paid: 5000, due: 5000 }
-            ]
-        };
+        let state = JSON.parse(localStorage.getItem('mudhiData')) || { places: [], customers: [] };
+        let activePlace = null;
+        let activeCustomer = null;
 
-        // --- Core Functions ---
+        function save() { localStorage.setItem('mudhiData', JSON.stringify(state)); render(); }
 
-        // 1. Show Customers based on Place clicked
-        function showCustomers(placeKey) {
-            const customerListDiv = document.getElementById('customersList');
-            const detailsContainer = document.getElementById('detailsContainer');
-            const detailsView = document.getElementById('customerDetailsView');
-            
-            // Highlight active place (visual cue)
-            const placeItems = document.querySelectorAll('#placesList .list-item');
-            placeItems.forEach(item => item.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        function toggleMenu(e) { 
+            e.stopPropagation();
+            document.getElementById('dropdown').style.display = (document.getElementById('dropdown').style.display === 'block') ? 'none' : 'block'; 
+        }
 
-            // Reset details view
-            detailsView.style.display = 'none';
-            if(!document.querySelector('#detailsContainer .empty-state')) {
-                detailsContainer.innerHTML = '<div class="empty-state">Select a customer to view details</div>';
-            }
-
-            // Populate Customer List
-            customerListDiv.innerHTML = ''; // Clear previous
-            
-            if (dataStore[placeKey] && dataStore[placeKey].length > 0) {
-                dataStore[placeKey].forEach(customer => {
-                    // Create customer item
-                    const div = document.createElement('div');
-                    div.className = 'list-item';
-                    div.innerText = '👤 ' + customer.name;
-                    // Pass the customer object to the showDetails function
-                    div.onclick = (e) => showDetails(customer, e.currentTarget);
-                    customerListDiv.appendChild(div);
-                });
+        function openModal(type, targetCustIndex = null) {
+            document.getElementById('dropdown').style.display = 'none';
+            document.getElementById('modal').style.display = 'flex';
+            let content = "";
+            if(type === 'place') content = `<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save</button>`;
+            else if(type === 'customer') {
+                let options = state.places.map(p => `<option value="${p}">${p}</option>`).join('');
+                content = `<h3>Add Customer</h3><input id="cName" placeholder="Customer Name"><select id="cPlace">${options}</select><button class="btn-save" onclick="addCustomer()">Save</button>`;
             } else {
-                customerListDiv.innerHTML = '<div class="empty-state">No customers in this place yet.</div>';
+                content = `<h3>Add Entry for ${state.customers[targetCustIndex].name}</h3><input id="prod" placeholder="Product"><input id="amt" type="number" placeholder="Total"><input id="paid" type="number" placeholder="Paid"><button class="btn-save" onclick="addTrans(${targetCustIndex})">Save</button>`;
             }
+            document.getElementById('modalContent').innerHTML = content;
         }
 
-        // 2. Show Details based on Customer clicked
-        function showDetails(customerObj, element) {
-            const detailsContainer = document.getElementById('detailsContainer');
-            const detailsView = document.getElementById('customerDetailsView');
-            
-            // Highlight active customer
-            const custItems = document.querySelectorAll('#customersList .list-item');
-            custItems.forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
-
-            // Remove empty state if present
-            const emptyState = document.querySelector('#detailsContainer .empty-state');
-            if (emptyState) emptyState.remove();
-
-            // Populate data
-            document.getElementById('detName').innerText = customerObj.name;
-            document.getElementById('detDate').innerText = customerObj.date;
-            document.getElementById('detProduct').innerText = customerObj.product;
-            document.getElementById('detTotal').innerText = customerObj.total;
-            document.getElementById('detPaid').innerText = customerObj.paid;
-            document.getElementById('detDue').innerText = customerObj.due;
-
-            // Show the details section
-            detailsContainer.appendChild(detailsView); // Ensure it's inside
-            detailsView.style.display = 'block';
+        function addPlace() { state.places.push(document.getElementById('pName').value); closeAndSave(); }
+        function addCustomer() { state.customers.push({name: document.getElementById('cName').value, place: document.getElementById('cPlace').value, history: []}); closeAndSave(); }
+        function addTrans(idx) { 
+            state.customers[idx].history.push({prod: document.getElementById('prod').value, amt: document.getElementById('amt').value, paid: document.getElementById('paid').value}); 
+            closeAndSave(); 
         }
 
-        // 3. Add New Place Functionality
-        function addNewPlace() {
-            const placeName = prompt("Enter new Place name:");
-            if (placeName && placeName.trim() !== "") {
-                const list = document.getElementById('placesList');
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerText = '📍 ' + placeName;
-                
-                // Initialize empty array in dataStore for this new place
-                dataStore[placeName] = [];
-                
-                div.onclick = (e) => showCustomers(placeName);
-                list.appendChild(div);
-            }
-        }
+        function closeAndSave() { document.getElementById('modal').style.display = 'none'; save(); }
 
-        // 4. Add New Customer Functionality (Simple version)
-        function addNewCustomer() {
-            const placeName = prompt("Enter the Place name where this customer belongs (e.g., Bazaar):");
-            
-            if (placeName && dataStore[placeName] !== undefined) {
-                const custName = prompt("Enter Customer Name:");
-                if (custName) {
-                    // Create a dummy customer record
-                    const newCust = {
-                        name: custName,
-                        date: new Date().toLocaleDateString('en-GB'),
-                        product: 'Pending Entry',
-                        total: 0,
-                        paid: 0,
-                        due: 0
-                    };
-                    
-                    // Add to dataStore
-                    dataStore[placeName].push(newCust);
-                    alert("Customer added successfully! Click on the place to see the updated list.");
-                    
-                    // If that place is currently selected, refresh the list automatically
-                    // (Optional enhancement, skipped for brevity, user can just click place again)
-                }
+        // Core Render Logic
+        function render() {
+            // Render Places
+            document.getElementById('placeList').innerHTML = state.places.map(p => 
+                `<div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">${p}</div>`
+            ).join('');
+
+            // Render Customers (Filtered)
+            let filtered = activePlace ? state.customers.filter(c => c.place === activePlace) : [];
+            document.getElementById('customerList').innerHTML = filtered.map((c, i) => {
+                let realIdx = state.customers.indexOf(c);
+                return `<div class="item ${activeCustomer === c.name ? 'active' : ''}" onclick="selectCustomer('${c.name}')">
+                    ${c.name} <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">+</button>
+                </div>`;
+            }).join('');
+
+            // Render Details
+            let custObj = state.customers.find(c => c.name === activeCustomer);
+            if(custObj) {
+                document.getElementById('detailsBox').innerHTML = custObj.history.map(h => `
+                    <div class="details-box" style="border-bottom:1px solid #555">
+                        <div class="d-row"><span>Product:</span> <b>${h.prod}</b></div>
+                        <div class="d-row"><span>Total:</span> <span>₹${h.amt}</span></div>
+                        <div class="d-row"><span>Paid:</span> <span style="color:green">₹${h.paid}</span></div>
+                        <div class="d-row"><span>Baki:</span> <span style="color:red">₹${h.amt - h.paid}</span></div>
+                    </div>
+                `).join('');
             } else {
-                alert("Place not found. Please add the place first or check spelling.");
+                document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5">Select a customer</div>';
             }
         }
 
+        function selectPlace(p) { activePlace = p; activeCustomer = null; render(); }
+        function selectCustomer(c) { activeCustomer = c; render(); }
+
+        window.onclick = (e) => { 
+            if(e.target.className === 'modal') e.target.style.display = 'none';
+            document.getElementById('dropdown').style.display = 'none';
+        }
+        
+        render();
     </script>
 </body>
 </html>
