@@ -28,6 +28,11 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; flex: 1; }
         .col { background: rgba(0,0,0,0.2); border: 1px solid var(--gold); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
         .col-title { padding: 12px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; border-bottom: 1px solid var(--gold); }
+        
+        /* Search Bars */
+        .search-bar { width: 90%; margin: 10px auto 5px; padding: 8px; border-radius: 4px; border: 1px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; }
+        .search-bar:focus { border-color: var(--white); }
+
         .list { flex: 1; overflow-y: auto; padding: 10px; }
         .item { padding: 12px; margin-bottom: 5px; border: 1px solid transparent; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         .item:hover { background: rgba(255,255,255,0.05); }
@@ -37,12 +42,13 @@
         .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-weight: bold; }
         .details-box { padding: 15px; font-size: 1.1rem; }
         .d-row { margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .cust-header { text-align: center; color: var(--gold); margin-bottom: 15px; font-size: 1.3rem; border-bottom: 1px dashed var(--gold); padding-bottom: 10px;}
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: var(--bg-maroon); border: 2px solid var(--gold); padding: 25px; border-radius: 10px; width: 320px; }
         input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--gold); background: #333; color: white; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 10px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); }
+        .btn-save { width: 100%; padding: 10px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -59,9 +65,22 @@
         </div>
 
         <div class="grid">
-            <div class="col"><div class="col-title">Places</div><div class="list" id="placeList"></div></div>
-            <div class="col"><div class="col-title">Customers</div><div class="list" id="customerList"></div></div>
-            <div class="col"><div class="col-title">Details</div><div class="list" id="detailsBox"></div></div>
+            <div class="col">
+                <div class="col-title">Places</div>
+                <input type="text" id="searchPlace" class="search-bar" placeholder="🔍 Search Place..." onkeyup="render()">
+                <div class="list" id="placeList"></div>
+            </div>
+            
+            <div class="col">
+                <div class="col-title">Customers</div>
+                <input type="text" id="searchCust" class="search-bar" placeholder="🔍 Search Customer..." onkeyup="render()">
+                <div class="list" id="customerList"></div>
+            </div>
+            
+            <div class="col">
+                <div class="col-title">Details</div>
+                <div class="list" id="detailsBox"></div>
+            </div>
         </div>
     </div>
 
@@ -72,7 +91,7 @@
     <script>
         let state = JSON.parse(localStorage.getItem('mudhiData')) || { places: [], customers: [] };
         let activePlace = null;
-        let activeCustomer = null;
+        let activeCustomerIdx = null; // Used index to allow same name customers
 
         function save() { localStorage.setItem('mudhiData', JSON.stringify(state)); render(); }
 
@@ -85,20 +104,61 @@
             document.getElementById('dropdown').style.display = 'none';
             document.getElementById('modal').style.display = 'flex';
             let content = "";
-            if(type === 'place') content = `<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save</button>`;
+            
+            if(type === 'place') {
+                content = `<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save</button>`;
+            } 
             else if(type === 'customer') {
                 let options = state.places.map(p => `<option value="${p}">${p}</option>`).join('');
-                content = `<h3>Add Customer</h3><input id="cName" placeholder="Customer Name"><select id="cPlace">${options}</select><button class="btn-save" onclick="addCustomer()">Save</button>`;
-            } else {
-                content = `<h3>Add Entry for ${state.customers[targetCustIndex].name}</h3><input id="prod" placeholder="Product"><input id="amt" type="number" placeholder="Total"><input id="paid" type="number" placeholder="Paid"><button class="btn-save" onclick="addTrans(${targetCustIndex})">Save</button>`;
+                content = `<h3>Add Customer</h3>
+                           <input id="cName" placeholder="Customer Name">
+                           <input id="cPhone" type="text" placeholder="Phone Number (12 Digits)" maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                           <select id="cPlace">${options}</select>
+                           <button class="btn-save" onclick="addCustomer()">Save</button>`;
+            } 
+            else {
+                content = `<h3>Add Entry for ${state.customers[targetCustIndex].name}</h3>
+                           <input id="prod" placeholder="Product Details">
+                           <input id="amt" type="number" placeholder="Total Amount">
+                           <input id="paid" type="number" placeholder="Amount Paid">
+                           <button class="btn-save" onclick="addTrans(${targetCustIndex})">Save</button>`;
             }
             document.getElementById('modalContent').innerHTML = content;
         }
 
-        function addPlace() { state.places.push(document.getElementById('pName').value); closeAndSave(); }
-        function addCustomer() { state.customers.push({name: document.getElementById('cName').value, place: document.getElementById('cPlace').value, history: []}); closeAndSave(); }
+        function addPlace() { 
+            let pName = document.getElementById('pName').value.trim();
+            if(!pName) return;
+            
+            // Check if place already exists (case insensitive)
+            let exists = state.places.find(p => p.toLowerCase() === pName.toLowerCase());
+            if(exists) {
+                alert("This Place already exists! Please add a different one.");
+                return;
+            }
+
+            state.places.push(pName); 
+            closeAndSave(); 
+        }
+
+        function addCustomer() { 
+            let name = document.getElementById('cName').value.trim();
+            let phone = document.getElementById('cPhone').value.trim();
+            let place = document.getElementById('cPlace').value;
+
+            if(!name || !place) return;
+
+            state.customers.push({name: name, phone: phone, place: place, history: []}); 
+            closeAndSave(); 
+        }
+
         function addTrans(idx) { 
-            state.customers[idx].history.push({prod: document.getElementById('prod').value, amt: document.getElementById('amt').value, paid: document.getElementById('paid').value}); 
+            let prod = document.getElementById('prod').value;
+            let amt = document.getElementById('amt').value;
+            let paid = document.getElementById('paid').value;
+            if(!amt) amt = 0; if(!paid) paid = 0;
+
+            state.customers[idx].history.push({prod: prod, amt: amt, paid: paid, date: new Date().toLocaleDateString()}); 
             closeAndSave(); 
         }
 
@@ -106,38 +166,55 @@
 
         // Core Render Logic
         function render() {
+            let searchP = document.getElementById('searchPlace').value.toLowerCase();
+            let searchC = document.getElementById('searchCust').value.toLowerCase();
+
             // Render Places
-            document.getElementById('placeList').innerHTML = state.places.map(p => 
+            let filteredPlaces = state.places.filter(p => p.toLowerCase().includes(searchP));
+            document.getElementById('placeList').innerHTML = filteredPlaces.map(p => 
                 `<div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">${p}</div>`
             ).join('');
 
-            // Render Customers (Filtered)
-            let filtered = activePlace ? state.customers.filter(c => c.place === activePlace) : [];
-            document.getElementById('customerList').innerHTML = filtered.map((c, i) => {
-                let realIdx = state.customers.indexOf(c);
-                return `<div class="item ${activeCustomer === c.name ? 'active' : ''}" onclick="selectCustomer('${c.name}')">
+            // Render Customers
+            let filteredCustomers = activePlace ? state.customers.filter(c => c.place === activePlace) : [];
+            document.getElementById('customerList').innerHTML = filteredCustomers.map(c => {
+                let realIdx = state.customers.indexOf(c); // Get exact ID/Index
+                if(!c.name.toLowerCase().includes(searchC)) return ''; // Search filter
+                
+                return `<div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
                     ${c.name} <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">+</button>
                 </div>`;
             }).join('');
 
             // Render Details
-            let custObj = state.customers.find(c => c.name === activeCustomer);
-            if(custObj) {
-                document.getElementById('detailsBox').innerHTML = custObj.history.map(h => `
-                    <div class="details-box" style="border-bottom:1px solid #555">
+            if(activeCustomerIdx !== null && state.customers[activeCustomerIdx]) {
+                let custObj = state.customers[activeCustomerIdx];
+                let historyHTML = custObj.history.map(h => `
+                    <div class="details-box" style="border-bottom:1px solid rgba(212,175,55,0.3)">
+                        <div class="d-row"><span style="font-size:0.8rem; color:#aaa;">Date: ${h.date}</span></div>
                         <div class="d-row"><span>Product:</span> <b>${h.prod}</b></div>
                         <div class="d-row"><span>Total:</span> <span>₹${h.amt}</span></div>
-                        <div class="d-row"><span>Paid:</span> <span style="color:green">₹${h.paid}</span></div>
-                        <div class="d-row"><span>Baki:</span> <span style="color:red">₹${h.amt - h.paid}</span></div>
+                        <div class="d-row"><span>Paid:</span> <span style="color:#28a745">₹${h.paid}</span></div>
+                        <div class="d-row"><span>Baki:</span> <span style="color:#dc3545; font-weight:bold;">₹${h.amt - h.paid}</span></div>
                     </div>
                 `).join('');
+                
+                if(custObj.history.length === 0) historyHTML = '<div style="text-align:center; padding:20px; opacity:0.5">No entries yet</div>';
+
+                document.getElementById('detailsBox').innerHTML = `
+                    <div class="cust-header">
+                        👤 ${custObj.name} <br>
+                        <span style="font-size: 0.9rem; color: #ccc;">📞 ${custObj.phone || 'N/A'}</span>
+                    </div>
+                    ${historyHTML}
+                `;
             } else {
                 document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5">Select a customer</div>';
             }
         }
 
-        function selectPlace(p) { activePlace = p; activeCustomer = null; render(); }
-        function selectCustomer(c) { activeCustomer = c; render(); }
+        function selectPlace(p) { activePlace = p; activeCustomerIdx = null; render(); }
+        function selectCustomer(idx) { activeCustomerIdx = idx; render(); }
 
         window.onclick = (e) => { 
             if(e.target.className === 'modal') e.target.style.display = 'none';
