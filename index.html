@@ -4,66 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jay Shree Ram Mudhi Manager</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
     <style>
         :root {
             --bg-maroon: #5E1914;
             --gold: #D4AF37;
             --white: #FDF7E3;
             --active-bg: rgba(212, 175, 55, 0.2);
+            --danger: #ff4d4d;
+            --success: #28a745;
+            --edit: #4da6ff;
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; }
-        header { text-align: center; padding: 15px; border-bottom: 2px solid var(--gold); color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; }
-
-        .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 18px; }
         
-        /* Sidebar */
-        .sidebar { width: 80px; position: relative; }
-        .plus-btn { width: 60px; height: 60px; background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 50%; font-size: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .dropdown { display: none; position: absolute; left: 70px; top: 0; background: #333; border: 1px solid var(--gold); width: 180px; border-radius: 8px; z-index: 100; }
-        .dropdown a { display: block; padding: 12px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; }
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2.5rem; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .header-left, .header-right { display: flex; gap: 15px; align-items: center; }
+        
+        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 28px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; }
+        .edit-toggle-btn { background: transparent; border: 2px solid var(--gold); color: var(--gold); font-size: 24px; }
+        .edit-toggle-btn.active { background: var(--danger); border-color: var(--danger); color: white; }
+
+        /* Dropdowns */
+        .dropdown-container { position: relative; }
+        .dropdown { display: none; position: absolute; top: 65px; background: #333; border: 1px solid var(--gold); min-width: 220px; border-radius: 8px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .dropdown.left-drop { left: 0; }
+        .dropdown.right-drop { right: 0; }
+        .dropdown a { display: block; padding: 15px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; font-size: 1.1rem; }
         .dropdown a:hover { background: var(--gold); color: var(--bg-maroon); }
 
         /* Grid */
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; flex: 1; }
-        .col { background: rgba(0,0,0,0.2); border: 1px solid var(--gold); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
-        .col-title { padding: 12px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; border-bottom: 1px solid var(--gold); }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 25px; gap: 25px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 25px; width: 100%; }
+        .col { background: rgba(0,0,0,0.2); border: 2px solid var(--gold); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+        .col-title { padding: 15px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; font-size: 1.4rem; border-bottom: 2px solid var(--gold); }
         
-        /* Search Bars */
-        .search-bar { width: 90%; margin: 10px auto 5px; padding: 8px; border-radius: 4px; border: 1px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; }
-        .search-bar:focus { border-color: var(--white); }
-
-        .list { flex: 1; overflow-y: auto; padding: 10px; }
-        .item { padding: 12px; margin-bottom: 5px; border: 1px solid transparent; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        /* Lists */
+        .search-bar { width: 92%; margin: 15px auto 5px; padding: 12px; border-radius: 6px; border: 2px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; text-transform: capitalize; font-size: 1.2rem; }
+        .list { flex: 1; overflow-y: auto; padding: 15px; }
+        .item { padding: 15px; margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; }
         .item:hover { background: rgba(255,255,255,0.05); }
-        .item.active { background: var(--active-bg); border-color: var(--gold); color: var(--gold); }
+        .item.active { background: var(--active-bg); border-color: var(--gold); color: var(--gold); font-weight: bold; }
         
-        /* Details & Buttons */
-        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-weight: bold; }
-        .details-box { padding: 15px; font-size: 1.1rem; }
-        .d-row { margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .cust-header { text-align: center; color: var(--gold); margin-bottom: 15px; font-size: 1.3rem; border-bottom: 1px dashed var(--gold); padding-bottom: 10px;}
+        /* Actions */
+        .item-actions { display: none; gap: 10px; }
+        .edit-mode .item-actions { display: flex; }
+        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 2px 5px; }
+        .btn-icon.edit { color: var(--edit); }
+        .btn-icon.del { color: var(--danger); }
+        
+        /* Details Area */
+        .details-box { padding: 20px; font-size: 1.3rem; position: relative; border-bottom: 1px solid rgba(212,175,55,0.3); }
+        .d-row { margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .cust-header { text-align: center; color: var(--gold); margin-bottom: 20px; padding: 20px; font-size: 1.8rem; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px;}
+        
+        /* Corner Price List Button */
+        .price-corner-btn { position: absolute; right: 15px; top: 15px; font-size: 30px; background: none; border: none; cursor: pointer; transition: 0.2s; }
+        .price-corner-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--gold)); }
 
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--bg-maroon); border: 2px solid var(--gold); padding: 25px; border-radius: 10px; width: 320px; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--gold); background: #333; color: white; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 10px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 10px; }
+        .place-tag { font-size: 0.9rem; color: #ccc; margin-left: 8px; font-weight: normal; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 450px; position: relative; max-height: 90vh; overflow-y: auto;}
+        
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+        
+        .modal-content h3 { font-size: 1.8rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; }
+        input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.4rem; text-align: right; }
+        
+        #pName, #cName { text-transform: capitalize; }
+        .btn-save { width: 100%; padding: 15px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.4rem; border-radius: 6px; }
+        
+        #dbStatus { font-size: 1rem; color: #aaa; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
+
+        /* Cart styling */
+        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #555; padding: 8px 0; font-size:1.1rem; }
     </style>
 </head>
 <body>
 
-    <header>Jay Shree Ram Mudhi</header>
-
-    <div class="main-wrapper">
-        <div class="sidebar">
-            <button class="plus-btn" onclick="toggleMenu(event)">+</button>
-            <div id="dropdown" class="dropdown">
-                <a onclick="openModal('place')">Add Place</a>
-                <a onclick="openModal('customer')">Add Customer</a>
+    <header>
+        <div class="header-left">
+            <div class="dropdown-container">
+                <button class="header-btn" onclick="toggleMenu('addDrop', event)">+</button>
+                <div id="addDrop" class="dropdown left-drop">
+                    <a onclick="openModal('place')">Add Place (Ctrl+A+P)</a>
+                    <a onclick="openModal('customer')">Add Customer (Ctrl+A+C)</a>
+                </div>
             </div>
+            <button class="header-btn edit-toggle-btn" id="editToggleBtn" onclick="toggleEditMode()" title="Toggle Edit/Delete Mode">✏️</button>
         </div>
 
+        <div>
+            <h1 class="header-title">Jay Shree Ram Mudhi</h1>
+            <div id="dbStatus">Loading Cloud Data... ⏳</div>
+        </div>
+
+        <div class="header-right">
+            <div class="dropdown-container">
+                <button class="header-btn" onclick="toggleMenu('mainDrop', event)">☰</button>
+                <div id="mainDrop" class="dropdown right-drop">
+                    <a onclick="alert('Staff Management - Coming Soon!')">Staff Management</a>
+                    <a onclick="alert('Total Sale - Coming Soon!')">Total Sale</a>
+                    <a onclick="alert('Billing System - Coming Soon!')">Billing</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
         <div class="grid">
             <div class="col">
                 <div class="col-title">Places</div>
@@ -73,7 +132,7 @@
             
             <div class="col">
                 <div class="col-title">Customers</div>
-                <input type="text" id="searchCust" class="search-bar" placeholder="🔍 Search Customer..." onkeyup="render()">
+                <input type="text" id="searchCust" class="search-bar" placeholder="🔍 Global Customer Search..." onkeyup="render()">
                 <div class="list" id="customerList"></div>
             </div>
             
@@ -84,144 +143,451 @@
         </div>
     </div>
 
+    <!-- Modal Background -->
     <div id="modal" class="modal">
         <div class="modal-content" id="modalContent"></div>
     </div>
 
     <script>
-        let state = JSON.parse(localStorage.getItem('mudhiData')) || { places: [], customers: [] };
-        let activePlace = null;
-        let activeCustomerIdx = null; // Used index to allow same name customers
-
-        function save() { localStorage.setItem('mudhiData', JSON.stringify(state)); render(); }
-
-        function toggleMenu(e) { 
-            e.stopPropagation();
-            document.getElementById('dropdown').style.display = (document.getElementById('dropdown').style.display === 'block') ? 'none' : 'block'; 
+        function autoCapitalize(text) {
+            if (!text) return text;
+            return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
-        function openModal(type, targetCustIndex = null) {
-            document.getElementById('dropdown').style.display = 'none';
+        // ==========================================
+        // FIREBASE SETUP
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
+            authDomain: "jay-shree-ram-mudhi.firebaseapp.com",
+            databaseURL: "https://jay-shree-ram-mudhi-default-rtdb.firebaseio.com",
+            projectId: "jay-shree-ram-mudhi",
+            storageBucket: "jay-shree-ram-mudhi.firebasestorage.app",
+            messagingSenderId: "146218859864",
+            appId: "1:146218859864:web:56a4dac1c0c20a3281b92d",
+            measurementId: "G-Z86Z8VSQKT"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dbRef = database.ref('appData/mainState');
+
+        let state = { places: [], customers: [] };
+        let activePlace = null;
+        let activeCustomerIdx = null; 
+        let isEditMode = false;
+        
+        // Multi-product billing variables
+        let tempBillItems = [];
+        let tempBillTotal = 0;
+        
+        // CLOUD SYNC
+        dbRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                let cloudData = snapshot.val();
+                state.places = cloudData.places || [];
+                state.customers = cloudData.customers || [];
+            } else { state = { places: [], customers: [] }; }
+            document.getElementById('dbStatus').innerHTML = "Cloud Synced 🟢";
+            document.getElementById('dbStatus').style.color = "#4CAF50";
+            render(); 
+        }, (error) => {
+            document.getElementById('dbStatus').innerHTML = "Database Error 🔴";
+            document.getElementById('dbStatus').style.color = "#ff4d4d";
+        });
+
+        function saveToCloud() { 
+            dbRef.set({ places: state.places, customers: state.customers }).catch((error) => { alert("Data save nahi hua!"); });
+        }
+
+        // ==========================================
+        // UI & MODALS
+        // ==========================================
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            document.body.classList.toggle('edit-mode', isEditMode);
+            document.getElementById('editToggleBtn').classList.toggle('active', isEditMode);
+        }
+
+        function toggleMenu(menuId, e) { 
+            e.stopPropagation();
+            document.getElementById('addDrop').style.display = 'none';
+            document.getElementById('mainDrop').style.display = 'none';
+            document.getElementById(menuId).style.display = 'block'; 
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function openModal(type, targetIdx = null, transIdx = null) {
+            document.getElementById('addDrop').style.display = 'none';
+            document.getElementById('mainDrop').style.display = 'none';
             document.getElementById('modal').style.display = 'flex';
+            
+            let closeBtnHTML = `<span class="close-btn" onclick="closeModal()" title="Close Form">&times;</span>`;
             let content = "";
             
             if(type === 'place') {
-                content = `<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save</button>`;
+                content = `${closeBtnHTML}<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save Data</button>`;
             } 
-            else if(type === 'customer') {
-                let options = state.places.map(p => `<option value="${p}">${p}</option>`).join('');
-                content = `<h3>Add Customer</h3>
-                           <input id="cName" placeholder="Customer Name">
-                           <input id="cPhone" type="text" placeholder="Phone Number (12 Digits)" maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                           <select id="cPlace">${options}</select>
-                           <button class="btn-save" onclick="addCustomer()">Save</button>`;
-            } 
-            else {
-                content = `<h3>Add Entry for ${state.customers[targetCustIndex].name}</h3>
-                           <input id="prod" placeholder="Product Details">
-                           <input id="amt" type="number" placeholder="Total Amount">
-                           <input id="paid" type="number" placeholder="Amount Paid">
-                           <button class="btn-save" onclick="addTrans(${targetCustIndex})">Save</button>`;
+            else if(type === 'editPlace') {
+                content = `${closeBtnHTML}<h3>Edit Place</h3><input id="pName" value="${targetIdx}" placeholder="Place Name"><button class="btn-save" onclick="saveEditedPlace('${targetIdx}')">Update Place</button>`;
             }
+            else if(type === 'customer') {
+                let options = state.places.map(p => `<option value="${p}" ${p === activePlace ? 'selected' : ''}>${p}</option>`).join('');
+                content = `${closeBtnHTML}<h3>Add Customer</h3>
+                <input id="cName" placeholder="Customer Name">
+                <input id="cPhone" type="text" placeholder="Mobile No. (10 Digits)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <select id="cPlace">${options}</select><button class="btn-save" onclick="addCustomer()">Save Data</button>`;
+            } 
+            else if(type === 'editCustomer') {
+                let c = state.customers[targetIdx];
+                let options = state.places.map(p => `<option value="${p}" ${p === c.place ? 'selected' : ''}>${p}</option>`).join('');
+                content = `${closeBtnHTML}<h3>Edit Customer</h3>
+                <input id="cName" value="${c.name}">
+                <input id="cPhone" type="text" value="${c.phone}" placeholder="Mobile No. (10 Digits)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <select id="cPlace">${options}</select><button class="btn-save" onclick="saveEditedCustomer(${targetIdx})">Update Details</button>`;
+            }
+            else if(type === 'priceList') {
+                let c = state.customers[targetIdx];
+                let pList = c.priceList || [];
+                let listHTML = pList.map((p, i) => `
+                    <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.1); padding:10px 15px; margin-bottom:8px; border-radius:6px; border:1px solid var(--gold);">
+                        <span style="font-size:1.2rem; font-weight:bold;">${p.prodName}</span>
+                        <span style="font-size:1.2rem; color:var(--gold);">₹${p.rate} <button onclick="deletePrice(${targetIdx}, ${i})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.2rem; margin-left:15px;" title="Delete Price">🗑️</button></span>
+                    </div>
+                `).join('');
+                
+                content = `${closeBtnHTML}
+                    <h3 style="margin-bottom:5px;">${c.name} ki Price List</h3>
+                    <div style="max-height: 200px; overflow-y:auto; margin-bottom: 20px;">
+                        ${listHTML || '<div style="text-align:center; padding:15px; color:#aaa;">Abhi koi price add nahi kiya hai.</div>'}
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px dashed var(--gold);">
+                        <h4 style="margin:0 0 10px 0; color:var(--gold); text-align:center;">Naya Product Rate Add Karein</h4>
+                        <input id="newPName" placeholder="Product Name (e.g., Special Mudhi)">
+                        <input id="newPRate" type="number" placeholder="Rate / Price (₹)">
+                        <button class="btn-save" style="margin-top:5px; font-size:1.2rem; padding:10px;" onclick="addPrice(${targetIdx})">Save Rate</button>
+                    </div>`;
+            }
+            else if(type === 'trans') {
+                tempBillItems = []; // Reset cart
+                tempBillTotal = 0;
+                let c = state.customers[targetIdx];
+                let pList = c.priceList || [];
+                
+                if(pList.length === 0) {
+                    content = `${closeBtnHTML}<h3>New Bill</h3>
+                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Pehle iski Price List (📜) add karein!</p>`;
+                } else {
+                    let options = pList.map((p, i) => `<option value="${i}">${p.prodName} (₹${p.rate})</option>`).join('');
+                    content = `${closeBtnHTML}<h3>New Bill</h3>
+                               
+                               <!-- Cart Area -->
+                               <div id="billCart" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; border:1px solid #555;">
+                                   <div style="text-align:center; color:#aaa; font-style:italic;">Cart abhi khali hai</div>
+                               </div>
+                               
+                               <!-- Add Item Section -->
+                               <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+                                   <select id="billProd" style="margin:0; flex:2;">
+                                       <option value="" disabled selected>-- Product Chune --</option>
+                                       ${options}
+                                   </select>
+                                   <input id="billQty" type="number" placeholder="Qty" style="margin:0; flex:1;" title="Kitna liya?">
+                                   <button id="addBtn" onclick="addBillItem(${targetIdx})" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:12px; cursor:pointer; font-weight:bold; font-size:1.1rem;">+ Add</button>
+                               </div>
+
+                               <hr style="border-color:var(--gold); margin-bottom:15px;">
+                               
+                               <!-- Checkout Section -->
+                               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                   <span style="font-size:1.2rem; color:var(--gold);">Total Bill Amount:</span>
+                                   <input id="amt" value="₹0" readonly style="width:140px; margin:0;">
+                               </div>
+                               
+                               <div style="display:flex; justify-content:space-between; align-items:center;">
+                                   <span style="font-size:1.2rem;">Kitna Paisa Diya? (Paid):</span>
+                                   <input id="paid" type="number" placeholder="0" style="width:140px; margin:0; font-weight:bold; font-size:1.4rem;">
+                               </div>
+
+                               <button class="btn-save" onclick="addTrans(${targetIdx})">Save Final Bill</button>`;
+                }
+            }
+            else if(type === 'editTrans') {
+                let t = state.customers[targetIdx].history[transIdx];
+                content = `${closeBtnHTML}<h3>Edit Bill</h3>
+                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Purana record direct edit karein)</p>
+                           <input id="prod" value="${t.prod}" placeholder="Product Name & Qty">
+                           <input id="amt" type="number" value="${t.amt}" placeholder="Total Amount (₹)">
+                           <input id="paid" type="number" value="${t.paid}" placeholder="Amount Paid (₹)">
+                           <button class="btn-save" onclick="saveEditedTrans(${targetIdx}, ${transIdx})">Update Bill</button>`;
+            }
+            
             document.getElementById('modalContent').innerHTML = content;
+            setTimeout(() => { let input = document.querySelector('.modal-content input:not([readonly])'); if(input) input.focus(); }, 100);
         }
 
-        function addPlace() { 
-            let pName = document.getElementById('pName').value.trim();
-            if(!pName) return;
+        // =======================
+        // CART LOGIC (MULTI-PRODUCT)
+        // =======================
+        function addBillItem(cIdx) {
+            let sel = document.getElementById('billProd');
+            let qtyInput = document.getElementById('billQty');
+            let selIdx = sel.value;
+            let qty = parseFloat(qtyInput.value);
+
+            if(selIdx === "" || isNaN(qty) || qty <= 0) { alert("Product chune aur sahi Quantity daalein!"); return; }
+
+            let pList = state.customers[cIdx].priceList;
+            let prod = pList[selIdx];
+            let itemTotal = prod.rate * qty;
+
+            tempBillItems.push({ name: prod.prodName, qty: qty, total: itemTotal });
             
-            // Check if place already exists (case insensitive)
-            let exists = state.places.find(p => p.toLowerCase() === pName.toLowerCase());
-            if(exists) {
-                alert("This Place already exists! Please add a different one.");
+            sel.value = "";
+            qtyInput.value = "";
+            renderBillCart();
+            qtyInput.focus(); // keep focus for easy typing
+        }
+
+        function removeBillItem(index) {
+            tempBillItems.splice(index, 1);
+            renderBillCart();
+        }
+
+        function renderBillCart() {
+            let cartDiv = document.getElementById('billCart');
+            tempBillTotal = 0;
+            
+            if(tempBillItems.length === 0) {
+                cartDiv.innerHTML = '<div style="text-align:center; color:#aaa; font-style:italic;">Cart abhi khali hai</div>';
+                document.getElementById('amt').value = "₹0";
                 return;
             }
 
-            state.places.push(pName); 
-            closeAndSave(); 
+            let html = tempBillItems.map((item, index) => {
+                tempBillTotal += item.total;
+                return `<div class="cart-item">
+                    <span>${item.name} <small style="color:var(--gold);">(x${item.qty})</small></span>
+                    <span>₹${item.total} <button onclick="removeBillItem(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1rem;" title="Hatao">❌</button></span>
+                </div>`;
+            }).join('');
+            
+            cartDiv.innerHTML = html;
+            document.getElementById('amt').value = "₹" + tempBillTotal;
+            // Auto-scroll cart to bottom
+            cartDiv.scrollTop = cartDiv.scrollHeight;
+        }
+
+        // =======================
+        // DATA ACTIONS
+        // =======================
+        
+        function addPrice(cIdx) {
+            let pName = autoCapitalize(document.getElementById('newPName').value.trim());
+            let pRate = parseFloat(document.getElementById('newPRate').value);
+            if(!pName || isNaN(pRate)) return;
+            
+            if(!state.customers[cIdx].priceList) state.customers[cIdx].priceList = [];
+            state.customers[cIdx].priceList.push({ prodName: pName, rate: pRate });
+            saveToCloud();
+            openModal('priceList', cIdx); 
+        }
+        function deletePrice(cIdx, pIdx) {
+            state.customers[cIdx].priceList.splice(pIdx, 1);
+            saveToCloud(); openModal('priceList', cIdx); 
+        }
+
+        function addPlace() { 
+            let p = autoCapitalize(document.getElementById('pName').value.trim()); 
+            if(!p || state.places.find(x => x.toLowerCase() === p.toLowerCase())) return;
+            state.places.push(p); saveToCloud(); closeModal();
+        }
+        function saveEditedPlace(oldName) {
+            let newName = autoCapitalize(document.getElementById('pName').value.trim()); 
+            if(!newName || newName === oldName) { closeModal(); return; }
+            let idx = state.places.indexOf(oldName);
+            if(idx > -1) state.places[idx] = newName;
+            state.customers.forEach(c => { if(c.place === oldName) c.place = newName; });
+            if(activePlace === oldName) activePlace = newName;
+            saveToCloud(); closeModal();
+        }
+        function deletePlace(p) {
+            if(confirm(`Kya aap sach mein ${p} ko delete karna chahte hain?`)) {
+                state.places = state.places.filter(x => x !== p);
+                if(activePlace === p) { activePlace = null; activeCustomerIdx = null; }
+                saveToCloud();
+            }
         }
 
         function addCustomer() { 
-            let name = document.getElementById('cName').value.trim();
-            let phone = document.getElementById('cPhone').value.trim();
+            let name = autoCapitalize(document.getElementById('cName').value.trim());
+            let phone = document.getElementById('cPhone').value;
             let place = document.getElementById('cPlace').value;
-
             if(!name || !place) return;
-
-            state.customers.push({name: name, phone: phone, place: place, history: []}); 
-            closeAndSave(); 
+            if(phone.length !== 10) { alert("Mobile number exactly 10 digits ka hona chahiye!"); return; }
+            state.customers.push({name, phone, place, history: [], priceList: []}); saveToCloud(); closeModal();
+        }
+        function saveEditedCustomer(idx) {
+            let newPhone = document.getElementById('cPhone').value;
+            if(newPhone.length !== 10) { alert("Mobile number exactly 10 digits ka hona chahiye!"); return; }
+            state.customers[idx].name = autoCapitalize(document.getElementById('cName').value.trim());
+            state.customers[idx].phone = newPhone;
+            state.customers[idx].place = document.getElementById('cPlace').value;
+            saveToCloud(); closeModal();
+        }
+        function deleteCustomer(idx) {
+            if(confirm(`Kya aap sach mein customer ${state.customers[idx].name} ko delete karna chahte hain?`)) {
+                state.customers.splice(idx, 1); activeCustomerIdx = null; saveToCloud();
+            }
         }
 
         function addTrans(idx) { 
-            let prod = document.getElementById('prod').value;
-            let amt = document.getElementById('amt').value;
-            let paid = document.getElementById('paid').value;
-            if(!amt) amt = 0; if(!paid) paid = 0;
-
-            state.customers[idx].history.push({prod: prod, amt: amt, paid: paid, date: new Date().toLocaleDateString()}); 
-            closeAndSave(); 
+            if(tempBillItems.length === 0) { alert("Bhai, kam se kam ek item toh cart mein add karo!"); return; }
+            
+            // Format string: "Special Mudhi (x2) + Normal Mudhi (x1)"
+            let prodString = tempBillItems.map(i => `${i.name} (x${i.qty})`).join(' + ');
+            let amt = tempBillTotal;
+            let paid = parseFloat(document.getElementById('paid').value) || 0;
+            
+            if(!state.customers[idx].history) state.customers[idx].history = [];
+            state.customers[idx].history.push({prod: prodString, amt: amt, paid: paid, date: new Date().toLocaleDateString()}); 
+            saveToCloud(); closeModal();
+        }
+        
+        function saveEditedTrans(cIdx, tIdx) {
+            let t = state.customers[cIdx].history[tIdx];
+            t.prod = document.getElementById('prod').value.trim(); // No auto-capitalize here to keep x2 formatting intact
+            t.amt = parseFloat(document.getElementById('amt').value) || 0;
+            t.paid = parseFloat(document.getElementById('paid').value) || 0;
+            saveToCloud(); closeModal();
+        }
+        function deleteTrans(cIdx, tIdx) {
+            if(confirm("Kya aap yeh bill entry delete karna chahte hain?")) { 
+                state.customers[cIdx].history.splice(tIdx, 1); saveToCloud(); 
+            }
         }
 
-        function closeAndSave() { document.getElementById('modal').style.display = 'none'; save(); }
-
-        // Core Render Logic
+        // =======================
+        // RENDER UI
+        // =======================
         function render() {
             let searchP = document.getElementById('searchPlace').value.toLowerCase();
             let searchC = document.getElementById('searchCust').value.toLowerCase();
 
-            // Render Places
-            let filteredPlaces = state.places.filter(p => p.toLowerCase().includes(searchP));
-            document.getElementById('placeList').innerHTML = filteredPlaces.map(p => 
-                `<div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">${p}</div>`
-            ).join('');
+            document.getElementById('placeList').innerHTML = state.places.filter(p => p.toLowerCase().includes(searchP)).map(p => `
+                <div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">
+                    <div>📍 ${p}</div>
+                    <div class="item-actions">
+                        <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editPlace', '${p}')">✏️</button>
+                        <button class="btn-icon del" onclick="event.stopPropagation(); deletePlace('${p}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
 
-            // Render Customers
-            let filteredCustomers = activePlace ? state.customers.filter(c => c.place === activePlace) : [];
-            document.getElementById('customerList').innerHTML = filteredCustomers.map(c => {
-                let realIdx = state.customers.indexOf(c); // Get exact ID/Index
-                if(!c.name.toLowerCase().includes(searchC)) return ''; // Search filter
-                
-                return `<div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
-                    ${c.name} <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">+</button>
+            let filteredCust = (searchC.trim() !== '') ? state.customers.filter(c => c.name.toLowerCase().includes(searchC) || (c.phone && c.phone.includes(searchC))) : (activePlace ? state.customers.filter(c => c.place === activePlace) : []);
+            
+            document.getElementById('customerList').innerHTML = filteredCust.map(c => {
+                let realIdx = state.customers.indexOf(c);
+                return `
+                <div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
+                    <div>👤 ${c.name} ${(searchC.trim() !== '') ? `<span class="place-tag">📍 ${c.place}</span>` : ''}</div>
+                    <div style="display:flex; gap:8px;">
+                        <div class="item-actions">
+                            <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editCustomer', ${realIdx})">✏️</button>
+                            <button class="btn-icon del" onclick="event.stopPropagation(); deleteCustomer(${realIdx})">🗑️</button>
+                        </div>
+                        <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">New Bill</button>
+                    </div>
                 </div>`;
             }).join('');
 
-            // Render Details
             if(activeCustomerIdx !== null && state.customers[activeCustomerIdx]) {
-                let custObj = state.customers[activeCustomerIdx];
-                let historyHTML = custObj.history.map(h => `
-                    <div class="details-box" style="border-bottom:1px solid rgba(212,175,55,0.3)">
-                        <div class="d-row"><span style="font-size:0.8rem; color:#aaa;">Date: ${h.date}</span></div>
-                        <div class="d-row"><span>Product:</span> <b>${h.prod}</b></div>
-                        <div class="d-row"><span>Total:</span> <span>₹${h.amt}</span></div>
-                        <div class="d-row"><span>Paid:</span> <span style="color:#28a745">₹${h.paid}</span></div>
-                        <div class="d-row"><span>Baki:</span> <span style="color:#dc3545; font-weight:bold;">₹${h.amt - h.paid}</span></div>
-                    </div>
-                `).join('');
+                let c = state.customers[activeCustomerIdx];
+                let historyArr = c.history || [];
                 
-                if(custObj.history.length === 0) historyHTML = '<div style="text-align:center; padding:20px; opacity:0.5">No entries yet</div>';
+                // Calculate Total Due or Jama
+                let grandTotalBill = 0;
+                let grandTotalPaid = 0;
+                let historyHTML = historyArr.map((h, tIdx) => {
+                    grandTotalBill += parseFloat(h.amt) || 0;
+                    grandTotalPaid += parseFloat(h.paid) || 0;
+                    
+                    return `<div class="details-box">
+                        <div style="position:absolute; top:15px; right:15px;" class="item-actions">
+                            <button class="btn-icon edit" onclick="openModal('editTrans', ${activeCustomerIdx}, ${tIdx})">✏️</button>
+                            <button class="btn-icon del" onclick="deleteTrans(${activeCustomerIdx}, ${tIdx})">🗑️</button>
+                        </div>
+                        <div class="d-row"><span style="font-size:1.1rem; color:#aaa;">📅 Date: ${h.date}</span></div>
+                        <div class="d-row"><span>Items:</span> <b>${h.prod}</b></div>
+                        <div class="d-row"><span>Total Bill:</span> <span>₹${h.amt}</span></div>
+                        <div class="d-row"><span>Amount Paid:</span> <span style="color:var(--success)">₹${h.paid}</span></div>
+                        <div class="d-row"><span>Baki (Due):</span> <span style="color:var(--danger); font-weight:bold; font-size: 1.4rem;">₹${h.amt - h.paid}</span></div>
+                    </div>`;
+                }).join('');
+                
+                if(historyArr.length === 0) historyHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Koi bills nahi hain. Naya bill add karein.</div>';
+
+                // Net Calculation for Header
+                let net = grandTotalPaid - grandTotalBill;
+                let dueStatusHTML = '';
+                if(net < 0) {
+                    dueStatusHTML = `<div style="color: var(--danger); font-weight: bold; font-size: 1.6rem; margin-top: 10px; background: rgba(255,0,0,0.1); padding: 5px; border-radius: 6px;">Total Baki (Due): ₹${Math.abs(net)}</div>`;
+                } else if(net > 0) {
+                    dueStatusHTML = `<div style="color: var(--success); font-weight: bold; font-size: 1.6rem; margin-top: 10px; background: rgba(0,255,0,0.1); padding: 5px; border-radius: 6px;">Jama (Advance): ₹${net}</div>`;
+                }
 
                 document.getElementById('detailsBox').innerHTML = `
                     <div class="cust-header">
-                        👤 ${custObj.name} <br>
-                        <span style="font-size: 0.9rem; color: #ccc;">📞 ${custObj.phone || 'N/A'}</span>
+                        <button class="price-corner-btn" onclick="openModal('priceList', ${activeCustomerIdx})" title="Price List Dekhein ya Badlen">📜</button>
+                        <div style="font-size: 2rem;">👤 ${c.name}</div>
+                        <div style="font-size: 1.1rem; color: #ccc; margin-top: 5px;">📞 ${c.phone || 'N/A'} | 📍 ${c.place}</div>
+                        ${dueStatusHTML}
                     </div>
-                    ${historyHTML}
-                `;
+                    ${historyHTML}`;
             } else {
-                document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5">Select a customer</div>';
+                document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">Kisi customer ko select karein</div>';
             }
         }
 
         function selectPlace(p) { activePlace = p; activeCustomerIdx = null; render(); }
-        function selectCustomer(idx) { activeCustomerIdx = idx; render(); }
+        function selectCustomer(idx) { activeCustomerIdx = idx; activePlace = state.customers[idx].place; render(); }
+
+        // ==========================================
+        // KEYBOARD SHORTCUTS & EVENTS
+        // ==========================================
+        window.addEventListener('keydown', function(e) {
+            if (document.getElementById('modal').style.display === 'flex') {
+                if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    let act = document.activeElement;
+                    // If typing quantity, Add to Cart instead of Saving whole bill
+                    if(act && act.id === 'billQty') {
+                        document.getElementById('addBtn').click();
+                    } else if(act && act.tagName !== 'BUTTON') {
+                        // Find the last save button (for normal forms)
+                        let saveBtns = document.querySelector('.modal-content').querySelectorAll('.btn-save');
+                        if(saveBtns.length > 0) saveBtns[saveBtns.length-1].click(); 
+                    }
+                }
+                else if (e.key === 'Escape') { closeModal(); }
+            }
+        });
+
+        let keysPressed = {};
+        window.addEventListener('keydown', function(e) {
+            keysPressed[e.key.toLowerCase()] = true;
+            if (e.ctrlKey && keysPressed['a'] && keysPressed['p']) { e.preventDefault(); openModal('place'); keysPressed = {}; }
+            else if (e.ctrlKey && keysPressed['a'] && keysPressed['c']) { e.preventDefault(); openModal('customer'); keysPressed = {}; }
+        });
+        window.addEventListener('keyup', function(e) { keysPressed[e.key.toLowerCase()] = false; });
 
         window.onclick = (e) => { 
-            if(e.target.className === 'modal') e.target.style.display = 'none';
-            document.getElementById('dropdown').style.display = 'none';
+            if(!e.target.matches('.header-btn')) {
+                document.getElementById('addDrop').style.display = 'none';
+                document.getElementById('mainDrop').style.display = 'none';
+            }
         }
-        
-        render();
     </script>
 </body>
 </html>
