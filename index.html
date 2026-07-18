@@ -60,26 +60,38 @@
         .btn-icon.edit { color: var(--edit); }
         .btn-icon.del { color: var(--danger); }
         
-        /* Details Area */
-        .details-box { padding: 20px; font-size: 1.3rem; position: relative; border-bottom: 1px solid rgba(212,175,55,0.3); }
-        .d-row { margin-bottom: 12px; display: flex; justify-content: space-between; }
-        .cust-header { text-align: center; color: var(--gold); margin-bottom: 20px; padding: 20px; font-size: 1.8rem; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px;}
-        
-        /* Corner Price List Button */
-        .price-corner-btn { position: absolute; right: 15px; top: 15px; font-size: 30px; background: none; border: none; cursor: pointer; transition: 0.2s; }
+        /* Details Area Header */
+        .cust-header { display: flex; flex-direction: column; justify-content: center; color: var(--gold); margin-bottom: 20px; padding: 20px; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px; min-height: 100px; }
+        .price-corner-btn { position: absolute; right: 15px; top: 15px; font-size: 30px; background: none; border: none; cursor: pointer; transition: 0.2s; z-index: 2; }
         .price-corner-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--gold)); }
-
+        
+        /* Corner Due Display Fixed Overlay */
+        .due-corner { position: absolute; right: 15px; bottom: 15px; font-size: 1.4rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 6px; z-index: 2;}
         .place-tag { font-size: 0.9rem; color: #ccc; margin-left: 8px; font-weight: normal; }
+
+        /* Date Rows */
+        .date-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3); padding: 15px 20px; margin-bottom: 10px;
+            border-radius: 8px; border: 1px solid var(--gold); cursor: pointer;
+            font-size: 1.3rem; transition: 0.2s;
+        }
+        .date-row:hover { background: rgba(212,175,55,0.15); }
+        .d-row { margin-bottom: 12px; display: flex; justify-content: space-between; font-size:1.2rem; word-break: break-word; align-items: center;}
+        
+        .prod-list-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px; font-size: 1.1rem; line-height: 1.6; border: 1px solid #555; width: 100%; box-sizing: border-box; }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 450px; position: relative; max-height: 90vh; overflow-y: auto;}
         
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; z-index:10; }
         .close-btn:hover { color: var(--danger); transform: scale(1.1); }
         
         .modal-content h3 { font-size: 1.8rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; font-family: inherit; }
+        textarea { resize: vertical; }
         input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.4rem; text-align: right; }
         
         #pName, #cName { text-transform: capitalize; }
@@ -114,6 +126,7 @@
             <div class="dropdown-container">
                 <button class="header-btn" onclick="toggleMenu('mainDrop', event)">☰</button>
                 <div id="mainDrop" class="dropdown right-drop">
+                    <a href="price.html">Our Price List</a>
                     <a onclick="alert('Staff Management - Coming Soon!')">Staff Management</a>
                     <a onclick="alert('Total Sale - Coming Soon!')">Total Sale</a>
                     <a onclick="alert('Billing System - Coming Soon!')">Billing</a>
@@ -172,14 +185,14 @@
         const database = firebase.database();
         const dbRef = database.ref('appData/mainState');
 
-        let state = { places: [], customers: [] };
+        let state = { places: [], customers: [], defaultPrices: [] };
         let activePlace = null;
         let activeCustomerIdx = null; 
         let isEditMode = false;
         
-        // Multi-product billing variables
         let tempBillItems = [];
         let tempBillTotal = 0;
+        let editingPriceIdx = -1;
         
         // CLOUD SYNC
         dbRef.on('value', (snapshot) => {
@@ -187,7 +200,10 @@
                 let cloudData = snapshot.val();
                 state.places = cloudData.places || [];
                 state.customers = cloudData.customers || [];
-            } else { state = { places: [], customers: [] }; }
+                state.defaultPrices = cloudData.defaultPrices || []; // Fetching Global Prices
+            } else { 
+                state = { places: [], customers: [], defaultPrices: [] }; 
+            }
             document.getElementById('dbStatus').innerHTML = "Cloud Synced 🟢";
             document.getElementById('dbStatus').style.color = "#4CAF50";
             render(); 
@@ -196,12 +212,17 @@
             document.getElementById('dbStatus').style.color = "#ff4d4d";
         });
 
+        // IMPORTANT: Ensure defaultPrices array is not overwritten with empty when saving
         function saveToCloud() { 
-            dbRef.set({ places: state.places, customers: state.customers }).catch((error) => { alert("Data save nahi hua!"); });
+            dbRef.set({ 
+                places: state.places, 
+                customers: state.customers,
+                defaultPrices: state.defaultPrices || []
+            }).catch((error) => { alert("Data save nahi hua!"); });
         }
 
         // ==========================================
-        // UI & MODALS
+        // UI & MODALS 
         // ==========================================
         function toggleEditMode() {
             isEditMode = !isEditMode;
@@ -223,7 +244,7 @@
             document.getElementById('mainDrop').style.display = 'none';
             document.getElementById('modal').style.display = 'flex';
             
-            let closeBtnHTML = `<span class="close-btn" onclick="closeModal()" title="Close Form">&times;</span>`;
+            let closeBtnHTML = `<span class="close-btn" onclick="closeModal()" title="Close">&times;</span>`;
             let content = "";
             
             if(type === 'place') {
@@ -248,79 +269,130 @@
                 <select id="cPlace">${options}</select><button class="btn-save" onclick="saveEditedCustomer(${targetIdx})">Update Details</button>`;
             }
             else if(type === 'priceList') {
+                editingPriceIdx = -1;
                 let c = state.customers[targetIdx];
                 let pList = c.priceList || [];
                 let listHTML = pList.map((p, i) => `
-                    <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.1); padding:10px 15px; margin-bottom:8px; border-radius:6px; border:1px solid var(--gold);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.1); padding:10px 15px; margin-bottom:8px; border-radius:6px; border:1px solid var(--gold);">
                         <span style="font-size:1.2rem; font-weight:bold;">${p.prodName}</span>
-                        <span style="font-size:1.2rem; color:var(--gold);">₹${p.rate} <button onclick="deletePrice(${targetIdx}, ${i})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.2rem; margin-left:15px;" title="Delete Price">🗑️</button></span>
+                        <div style="display:flex; align-items:center; gap: 10px;">
+                            <span style="font-size:1.2rem; color:var(--gold);">₹${p.rate}</span>
+                            <button onclick="editPriceForm(${targetIdx}, ${i})" style="color:var(--edit); background:none; border:none; cursor:pointer; font-size:1.2rem;" title="Edit Price">✏️</button>
+                            <button onclick="deletePrice(${targetIdx}, ${i})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.2rem;" title="Delete Price">🗑️</button>
+                        </div>
                     </div>
                 `).join('');
                 
                 content = `${closeBtnHTML}
-                    <h3 style="margin-bottom:5px;">${c.name} ki Price List</h3>
+                    <h3 style="margin-bottom:5px;">📜 ${c.name} ki Price List</h3>
+                    <p style="text-align:center; font-size:0.9rem; color:#aaa; margin-top:0;">Agar yahan khali raha toh bill mein Global Price List aayega.</p>
                     <div style="max-height: 200px; overflow-y:auto; margin-bottom: 20px;">
-                        ${listHTML || '<div style="text-align:center; padding:15px; color:#aaa;">Abhi koi price add nahi kiya hai.</div>'}
+                        ${listHTML || '<div style="text-align:center; padding:15px; color:#aaa;">Personal price add nahi hai.</div>'}
                     </div>
                     <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px dashed var(--gold);">
-                        <h4 style="margin:0 0 10px 0; color:var(--gold); text-align:center;">Naya Product Rate Add Karein</h4>
+                        <h4 style="margin:0 0 10px 0; color:var(--gold); text-align:center;">Naya Product Rate Set Karein</h4>
                         <input id="newPName" placeholder="Product Name (e.g., Special Mudhi)">
                         <input id="newPRate" type="number" placeholder="Rate / Price (₹)">
-                        <button class="btn-save" style="margin-top:5px; font-size:1.2rem; padding:10px;" onclick="addPrice(${targetIdx})">Save Rate</button>
+                        <button id="priceSaveBtn" class="btn-save" style="margin-top:5px; font-size:1.2rem; padding:10px;" onclick="addPrice(${targetIdx})">Save Rate</button>
                     </div>`;
             }
             else if(type === 'trans') {
-                tempBillItems = []; // Reset cart
+                tempBillItems = []; 
                 tempBillTotal = 0;
                 let c = state.customers[targetIdx];
-                let pList = c.priceList || [];
+                
+                // --- SMART PRICE LIST FALLBACK LOGIC ---
+                // Agar customer ka price list hai toh wo lo, warna default (global) prices lo
+                let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
                 
                 if(pList.length === 0) {
                     content = `${closeBtnHTML}<h3>New Bill</h3>
-                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Pehle iski Price List (📜) add karein!</p>`;
+                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Menu se pehle 'Our Price List' set karein ya Customer ki list banayein!</p>`;
                 } else {
+                    let listType = (c.priceList && c.priceList.length > 0) ? "Customer Price List" : "Global Price List";
                     let options = pList.map((p, i) => `<option value="${i}">${p.prodName} (₹${p.rate})</option>`).join('');
-                    content = `${closeBtnHTML}<h3>New Bill</h3>
-                               
-                               <!-- Cart Area -->
+                    
+                    content = `${closeBtnHTML}<h3>New Bill <br><span style="font-size:0.9rem; color:#aaa; font-weight:normal;">(Using: ${listType})</span></h3>
                                <div id="billCart" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; border:1px solid #555;">
                                    <div style="text-align:center; color:#aaa; font-style:italic;">Cart abhi khali hai</div>
                                </div>
-                               
-                               <!-- Add Item Section -->
                                <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
                                    <select id="billProd" style="margin:0; flex:2;">
                                        <option value="" disabled selected>-- Product Chune --</option>
                                        ${options}
                                    </select>
-                                   <input id="billQty" type="number" placeholder="Qty" style="margin:0; flex:1;" title="Kitna liya?">
+                                   <input id="billQty" type="number" placeholder="Qty" style="margin:0; flex:1;">
                                    <button id="addBtn" onclick="addBillItem(${targetIdx})" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:12px; cursor:pointer; font-weight:bold; font-size:1.1rem;">+ Add</button>
                                </div>
-
                                <hr style="border-color:var(--gold); margin-bottom:15px;">
-                               
-                               <!-- Checkout Section -->
                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                                    <span style="font-size:1.2rem; color:var(--gold);">Total Bill Amount:</span>
                                    <input id="amt" value="₹0" readonly style="width:140px; margin:0;">
                                </div>
-                               
                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                   <span style="font-size:1.2rem;">Kitna Paisa Diya? (Paid):</span>
+                                   <span style="font-size:1.2rem;">Paid Amount:</span>
                                    <input id="paid" type="number" placeholder="0" style="width:140px; margin:0; font-weight:bold; font-size:1.4rem;">
                                </div>
-
                                <button class="btn-save" onclick="addTrans(${targetIdx})">Save Final Bill</button>`;
                 }
             }
+            else if(type === 'dateBills') {
+                let dateStr = transIdx; 
+                let c = state.customers[targetIdx];
+                let hIdx = c.history.findIndex(h => h.date === dateStr);
+                let h = c.history[hIdx];
+                
+                let prevDue = 0;
+                for(let k = 0; k < hIdx; k++) {
+                    prevDue += (parseFloat(c.history[k].amt) || 0) - (parseFloat(c.history[k].paid) || 0);
+                }
+                
+                let closingBal = prevDue + parseFloat(h.amt) - parseFloat(h.paid);
+                
+                let prevDueText = prevDue > 0 ? `<span style="color:var(--danger)">₹${prevDue} (Due)</span>` : (prevDue < 0 ? `<span style="color:var(--success)">+₹${Math.abs(prevDue)} (Advance)</span>` : `<span style="color:#aaa;">₹0</span>`);
+                let closeBalText = closingBal > 0 ? `<span style="color:var(--danger)">₹${closingBal} (Due)</span>` : (closingBal < 0 ? `<span style="color:var(--success)">+₹${Math.abs(closingBal)} (Advance)</span>` : `<span style="color:#aaa;">₹0 (Clear)</span>`);
+
+                // Convert \n to <br> for HTML display
+                let formattedProd = h.prod ? h.prod.replace(/\n/g, '<br>') : '';
+
+                content = `${closeBtnHTML}
+                    <h3 style="margin-bottom:15px; font-size: 2rem;">📅 ${h.date}</h3>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--gold); position:relative;">
+                        
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom: 15px; border-bottom:1px solid #555; padding-bottom:10px;">
+                            <button class="btn-icon edit" onclick="openModal('editTrans', ${targetIdx}, ${hIdx})" title="Edit Aaj ka Record">✏️ Edit Day</button>
+                            <button class="btn-icon del" onclick="deleteTrans(${targetIdx}, ${hIdx})" title="Delete Aaj ka Record">🗑️ Delete Day</button>
+                        </div>
+                        
+                        <div class="d-row" style="flex-direction:column;">
+                            <span style="margin-bottom:5px; color:var(--gold);">🛒 Items Bought:</span>
+                            <div class="prod-list-box">
+                                ${formattedProd || '<span style="color:#aaa;">Cash Payment</span>'}
+                            </div>
+                        </div>
+                        
+                        <hr style="border-color:#555; margin:15px 0;">
+                        
+                        <div class="d-row"><span>🕒 Pichla Baki (Prev Due):</span> <b>${prevDueText}</b></div>
+                        <div class="d-row"><span>📝 Aaj Ka Bill:</span> <b>₹${h.amt}</b></div>
+                        <div class="d-row"><span>💰 Aaj Jama Kiya (Paid):</span> <b style="color:var(--success)">₹${h.paid}</b></div>
+                        
+                        <hr style="border-color:var(--gold); margin:15px 0;">
+                        
+                        <div class="d-row" style="font-size:1.5rem; align-items:center;">
+                            <span>📊 Final Hisaab:</span> 
+                            <b>${closeBalText}</b>
+                        </div>
+                    </div>`;
+            }
             else if(type === 'editTrans') {
                 let t = state.customers[targetIdx].history[transIdx];
-                content = `${closeBtnHTML}<h3>Edit Bill</h3>
-                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Purana record direct edit karein)</p>
-                           <input id="prod" value="${t.prod}" placeholder="Product Name & Qty">
-                           <input id="amt" type="number" value="${t.amt}" placeholder="Total Amount (₹)">
+                content = `${closeBtnHTML}<h3>Edit Daily Record</h3>
+                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh aaj ka poora hisaab edit karega)</p>
+                           <textarea id="prod" rows="5" placeholder="Product Details (Ek ke neeche ek likhein)">${t.prod}</textarea>
+                           <input id="amt" type="number" value="${t.amt}" placeholder="Total Bill Amount (₹)">
                            <input id="paid" type="number" value="${t.paid}" placeholder="Amount Paid (₹)">
-                           <button class="btn-save" onclick="saveEditedTrans(${targetIdx}, ${transIdx})">Update Bill</button>`;
+                           <button class="btn-save" onclick="saveEditedTrans(${targetIdx}, ${transIdx})">Update Record</button>`;
             }
             
             document.getElementById('modalContent').innerHTML = content;
@@ -328,76 +400,69 @@
         }
 
         // =======================
-        // CART LOGIC (MULTI-PRODUCT)
+        // CART LOGIC
         // =======================
         function addBillItem(cIdx) {
             let sel = document.getElementById('billProd');
             let qtyInput = document.getElementById('billQty');
-            let selIdx = sel.value;
-            let qty = parseFloat(qtyInput.value);
-
-            if(selIdx === "" || isNaN(qty) || qty <= 0) { alert("Product chune aur sahi Quantity daalein!"); return; }
-
-            let pList = state.customers[cIdx].priceList;
-            let prod = pList[selIdx];
-            let itemTotal = prod.rate * qty;
-
-            tempBillItems.push({ name: prod.prodName, qty: qty, total: itemTotal });
+            if(sel.value === "" || isNaN(qtyInput.value) || qtyInput.value <= 0) return;
             
-            sel.value = "";
-            qtyInput.value = "";
-            renderBillCart();
-            qtyInput.focus(); // keep focus for easy typing
+            let c = state.customers[cIdx];
+            let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
+            let prod = pList[sel.value];
+            
+            tempBillItems.push({ name: prod.prodName, qty: parseFloat(qtyInput.value), total: prod.rate * parseFloat(qtyInput.value) });
+            
+            sel.value = ""; qtyInput.value = "";
+            renderBillCart(); qtyInput.focus(); 
         }
-
-        function removeBillItem(index) {
-            tempBillItems.splice(index, 1);
-            renderBillCart();
-        }
-
+        function removeBillItem(index) { tempBillItems.splice(index, 1); renderBillCart(); }
         function renderBillCart() {
             let cartDiv = document.getElementById('billCart');
             tempBillTotal = 0;
-            
             if(tempBillItems.length === 0) {
                 cartDiv.innerHTML = '<div style="text-align:center; color:#aaa; font-style:italic;">Cart abhi khali hai</div>';
-                document.getElementById('amt').value = "₹0";
-                return;
+                document.getElementById('amt').value = "₹0"; return;
             }
-
-            let html = tempBillItems.map((item, index) => {
+            cartDiv.innerHTML = tempBillItems.map((item, index) => {
                 tempBillTotal += item.total;
                 return `<div class="cart-item">
                     <span>${item.name} <small style="color:var(--gold);">(x${item.qty})</small></span>
-                    <span>₹${item.total} <button onclick="removeBillItem(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1rem;" title="Hatao">❌</button></span>
+                    <span>₹${item.total} <button onclick="removeBillItem(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer;">❌</button></span>
                 </div>`;
             }).join('');
-            
-            cartDiv.innerHTML = html;
             document.getElementById('amt').value = "₹" + tempBillTotal;
-            // Auto-scroll cart to bottom
             cartDiv.scrollTop = cartDiv.scrollHeight;
         }
 
         // =======================
         // DATA ACTIONS
         // =======================
-        
-        function addPrice(cIdx) {
-            let pName = autoCapitalize(document.getElementById('newPName').value.trim());
-            let pRate = parseFloat(document.getElementById('newPRate').value);
-            if(!pName || isNaN(pRate)) return;
-            
-            if(!state.customers[cIdx].priceList) state.customers[cIdx].priceList = [];
-            state.customers[cIdx].priceList.push({ prodName: pName, rate: pRate });
-            saveToCloud();
-            openModal('priceList', cIdx); 
-        }
-        function deletePrice(cIdx, pIdx) {
-            state.customers[cIdx].priceList.splice(pIdx, 1);
-            saveToCloud(); openModal('priceList', cIdx); 
+        function editPriceForm(cIdx, pIdx) {
+            let p = state.customers[cIdx].priceList[pIdx];
+            document.getElementById('newPName').value = p.prodName;
+            document.getElementById('newPRate').value = p.rate;
+            editingPriceIdx = pIdx;
+            document.getElementById('priceSaveBtn').innerText = "Update Rate";
         }
 
+        function addPrice(cIdx) {
+            let n = autoCapitalize(document.getElementById('newPName').value.trim());
+            let r = parseFloat(document.getElementById('newPRate').value);
+            if(!n || isNaN(r)) return;
+            
+            if(!state.customers[cIdx].priceList) state.customers[cIdx].priceList = [];
+            
+            if(editingPriceIdx > -1) {
+                state.customers[cIdx].priceList[editingPriceIdx] = { prodName: n, rate: r };
+            } else {
+                state.customers[cIdx].priceList.push({ prodName: n, rate: r });
+            }
+            editingPriceIdx = -1;
+            saveToCloud(); openModal('priceList', cIdx); 
+        }
+        function deletePrice(cIdx, pIdx) { state.customers[cIdx].priceList.splice(pIdx, 1); saveToCloud(); openModal('priceList', cIdx); }
+        
         function addPlace() { 
             let p = autoCapitalize(document.getElementById('pName').value.trim()); 
             if(!p || state.places.find(x => x.toLowerCase() === p.toLowerCase())) return;
@@ -421,19 +486,15 @@
         }
 
         function addCustomer() { 
-            let name = autoCapitalize(document.getElementById('cName').value.trim());
-            let phone = document.getElementById('cPhone').value;
-            let place = document.getElementById('cPlace').value;
-            if(!name || !place) return;
-            if(phone.length !== 10) { alert("Mobile number exactly 10 digits ka hona chahiye!"); return; }
+            let name = autoCapitalize(document.getElementById('cName').value.trim()), phone = document.getElementById('cPhone').value, place = document.getElementById('cPlace').value;
+            if(!name || !place || phone.length !== 10) return;
             state.customers.push({name, phone, place, history: [], priceList: []}); saveToCloud(); closeModal();
         }
         function saveEditedCustomer(idx) {
-            let newPhone = document.getElementById('cPhone').value;
-            if(newPhone.length !== 10) { alert("Mobile number exactly 10 digits ka hona chahiye!"); return; }
+            let phone = document.getElementById('cPhone').value;
+            if(phone.length !== 10) return;
             state.customers[idx].name = autoCapitalize(document.getElementById('cName').value.trim());
-            state.customers[idx].phone = newPhone;
-            state.customers[idx].place = document.getElementById('cPlace').value;
+            state.customers[idx].phone = phone; state.customers[idx].place = document.getElementById('cPlace').value;
             saveToCloud(); closeModal();
         }
         function deleteCustomer(idx) {
@@ -442,29 +503,57 @@
             }
         }
 
+        // ONE ROW PER DATE SMART MERGING LOGIC
         function addTrans(idx) { 
-            if(tempBillItems.length === 0) { alert("Bhai, kam se kam ek item toh cart mein add karo!"); return; }
-            
-            // Format string: "Special Mudhi (x2) + Normal Mudhi (x1)"
-            let prodString = tempBillItems.map(i => `${i.name} (x${i.qty})`).join(' + ');
-            let amt = tempBillTotal;
             let paid = parseFloat(document.getElementById('paid').value) || 0;
+            let amt = tempBillTotal;
             
+            // Map items with Newlines instead of Plus signs
+            let prodString = tempBillItems.map(i => `${i.name} (x${i.qty}) = ₹${i.total}`).join('\n');
+
+            if(tempBillItems.length === 0) {
+                if(paid > 0) {
+                    prodString = "Cash Payment";
+                } else {
+                    alert("Bhai, kam se kam product chuno ya Paisa (Paid Amount) daalo!"); return; 
+                }
+            }
+            
+            let today = new Date().toLocaleDateString('en-GB');
             if(!state.customers[idx].history) state.customers[idx].history = [];
-            state.customers[idx].history.push({prod: prodString, amt: amt, paid: paid, date: new Date().toLocaleDateString()}); 
+            let existingIdx = state.customers[idx].history.findIndex(h => h.date === today);
+            
+            if(existingIdx > -1) {
+                let t = state.customers[idx].history[existingIdx];
+                if(prodString !== "Cash Payment") {
+                    if (!t.prod || t.prod === "Cash Payment") {
+                        t.prod = prodString; 
+                    } else {
+                        t.prod = t.prod + "\n" + prodString; // Append with Newline
+                    }
+                } else if(!t.prod) {
+                    t.prod = "Cash Payment";
+                }
+                t.amt = (parseFloat(t.amt) || 0) + amt;
+                t.paid = (parseFloat(t.paid) || 0) + paid;
+            } else {
+                state.customers[idx].history.push({prod: prodString, amt: amt, paid: paid, date: today}); 
+            }
+            
             saveToCloud(); closeModal();
         }
         
         function saveEditedTrans(cIdx, tIdx) {
-            let t = state.customers[cIdx].history[tIdx];
-            t.prod = document.getElementById('prod').value.trim(); // No auto-capitalize here to keep x2 formatting intact
-            t.amt = parseFloat(document.getElementById('amt').value) || 0;
-            t.paid = parseFloat(document.getElementById('paid').value) || 0;
+            state.customers[cIdx].history[tIdx].prod = document.getElementById('prod').value.trim();
+            state.customers[cIdx].history[tIdx].amt = parseFloat(document.getElementById('amt').value) || 0;
+            state.customers[cIdx].history[tIdx].paid = parseFloat(document.getElementById('paid').value) || 0;
             saveToCloud(); closeModal();
         }
+        
         function deleteTrans(cIdx, tIdx) {
-            if(confirm("Kya aap yeh bill entry delete karna chahte hain?")) { 
-                state.customers[cIdx].history.splice(tIdx, 1); saveToCloud(); 
+            if(confirm("Dhyan rahe: Kya aap is din ka poora record delete karna chahte hain?")) { 
+                state.customers[cIdx].history.splice(tIdx, 1); 
+                saveToCloud(); closeModal(); 
             }
         }
 
@@ -506,45 +595,49 @@
                 let c = state.customers[activeCustomerIdx];
                 let historyArr = c.history || [];
                 
-                // Calculate Total Due or Jama
-                let grandTotalBill = 0;
-                let grandTotalPaid = 0;
-                let historyHTML = historyArr.map((h, tIdx) => {
+                let grandTotalBill = 0, grandTotalPaid = 0;
+                
+                historyArr.forEach((h) => {
                     grandTotalBill += parseFloat(h.amt) || 0;
                     grandTotalPaid += parseFloat(h.paid) || 0;
-                    
-                    return `<div class="details-box">
-                        <div style="position:absolute; top:15px; right:15px;" class="item-actions">
-                            <button class="btn-icon edit" onclick="openModal('editTrans', ${activeCustomerIdx}, ${tIdx})">✏️</button>
-                            <button class="btn-icon del" onclick="deleteTrans(${activeCustomerIdx}, ${tIdx})">🗑️</button>
-                        </div>
-                        <div class="d-row"><span style="font-size:1.1rem; color:#aaa;">📅 Date: ${h.date}</span></div>
-                        <div class="d-row"><span>Items:</span> <b>${h.prod}</b></div>
-                        <div class="d-row"><span>Total Bill:</span> <span>₹${h.amt}</span></div>
-                        <div class="d-row"><span>Amount Paid:</span> <span style="color:var(--success)">₹${h.paid}</span></div>
-                        <div class="d-row"><span>Baki (Due):</span> <span style="color:var(--danger); font-weight:bold; font-size: 1.4rem;">₹${h.amt - h.paid}</span></div>
-                    </div>`;
-                }).join('');
+                });
                 
-                if(historyArr.length === 0) historyHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Koi bills nahi hain. Naya bill add karein.</div>';
-
-                // Net Calculation for Header
                 let net = grandTotalPaid - grandTotalBill;
                 let dueStatusHTML = '';
                 if(net < 0) {
-                    dueStatusHTML = `<div style="color: var(--danger); font-weight: bold; font-size: 1.6rem; margin-top: 10px; background: rgba(255,0,0,0.1); padding: 5px; border-radius: 6px;">Total Baki (Due): ₹${Math.abs(net)}</div>`;
+                    dueStatusHTML = `<div class="due-corner" style="color:var(--danger); border-color:var(--danger);">Due: ₹${Math.abs(net)}</div>`;
                 } else if(net > 0) {
-                    dueStatusHTML = `<div style="color: var(--success); font-weight: bold; font-size: 1.6rem; margin-top: 10px; background: rgba(0,255,0,0.1); padding: 5px; border-radius: 6px;">Jama (Advance): ₹${net}</div>`;
+                    dueStatusHTML = `<div class="due-corner" style="color:var(--success); border-color:var(--success);">Advance: +₹${net}</div>`;
+                }
+
+                let todayStr = new Date().toLocaleDateString('en-GB');
+                
+                let mappedHistory = historyArr.map((h, i) => ({...h, originalIndex: i}));
+                let reversedHistory = mappedHistory.reverse();
+                
+                let datesListHTML = reversedHistory.map(h => {
+                    let label = (h.date === todayStr) ? `Today (${h.date})` : h.date;
+                    return `
+                    <div class="date-row" onclick="openModal('dateBills', ${activeCustomerIdx}, '${h.date}')" title="Hisaab Dekhein">
+                        <span>📅 ${label}</span>
+                        <span style="color:var(--gold); font-weight:bold;">₹${h.amt}</span>
+                    </div>`;
+                }).join('');
+                
+                if(historyArr.length === 0) {
+                    datesListHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Abhi tak koi transaction nahi hai.</div>';
                 }
 
                 document.getElementById('detailsBox').innerHTML = `
                     <div class="cust-header">
-                        <button class="price-corner-btn" onclick="openModal('priceList', ${activeCustomerIdx})" title="Price List Dekhein ya Badlen">📜</button>
-                        <div style="font-size: 2rem;">👤 ${c.name}</div>
-                        <div style="font-size: 1.1rem; color: #ccc; margin-top: 5px;">📞 ${c.phone || 'N/A'} | 📍 ${c.place}</div>
+                        <button class="price-corner-btn" onclick="openModal('priceList', ${activeCustomerIdx})" title="Price List Setup">📜</button>
+                        <div style="font-size: 2.2rem; font-weight:bold; margin-bottom: 5px; max-width:85%;">👤 ${c.name}</div>
+                        <div style="font-size: 1.1rem; color: #ccc; margin-bottom: 30px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}</div>
                         ${dueStatusHTML}
                     </div>
-                    ${historyHTML}`;
+                    <div style="padding: 10px 0;">
+                        ${datesListHTML}
+                    </div>`;
             } else {
                 document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">Kisi customer ko select karein</div>';
             }
@@ -554,18 +647,16 @@
         function selectCustomer(idx) { activeCustomerIdx = idx; activePlace = state.customers[idx].place; render(); }
 
         // ==========================================
-        // KEYBOARD SHORTCUTS & EVENTS
+        // EVENTS
         // ==========================================
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('modal').style.display === 'flex') {
+                let act = document.activeElement;
                 if (e.key === 'Enter') { 
+                    if(act && act.tagName === 'TEXTAREA') { return; }
                     e.preventDefault(); 
-                    let act = document.activeElement;
-                    // If typing quantity, Add to Cart instead of Saving whole bill
-                    if(act && act.id === 'billQty') {
-                        document.getElementById('addBtn').click();
-                    } else if(act && act.tagName !== 'BUTTON') {
-                        // Find the last save button (for normal forms)
+                    if(act && act.id === 'billQty') { document.getElementById('addBtn').click(); } 
+                    else if(act && act.tagName !== 'BUTTON') {
                         let saveBtns = document.querySelector('.modal-content').querySelectorAll('.btn-save');
                         if(saveBtns.length > 0) saveBtns[saveBtns.length-1].click(); 
                     }
