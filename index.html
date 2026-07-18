@@ -94,7 +94,7 @@
         textarea { resize: vertical; }
         input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.4rem; text-align: right; }
         
-        #pName, #cName { text-transform: capitalize; }
+        #pName, #cName, #cNearby { text-transform: capitalize; }
         .btn-save { width: 100%; padding: 15px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.4rem; border-radius: 6px; }
         
         #dbStatus { font-size: 1rem; color: #aaa; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
@@ -128,7 +128,7 @@
                 <div id="mainDrop" class="dropdown right-drop">
                     <a href="price.html">Our Price List</a>
                     <a onclick="alert('Staff Management - Coming Soon!')">Staff Management</a>
-                    <a onclick="alert('Total Sale - Coming Soon!')">Total Sale</a>
+                    <a href="calculation.html">Total Calculation</a>
                     <a onclick="alert('Billing System - Coming Soon!')">Billing</a>
                 </div>
             </div>
@@ -200,7 +200,7 @@
                 let cloudData = snapshot.val();
                 state.places = cloudData.places || [];
                 state.customers = cloudData.customers || [];
-                state.defaultPrices = cloudData.defaultPrices || []; // Fetching Global Prices
+                state.defaultPrices = cloudData.defaultPrices || []; 
             } else { 
                 state = { places: [], customers: [], defaultPrices: [] }; 
             }
@@ -212,7 +212,6 @@
             document.getElementById('dbStatus').style.color = "#ff4d4d";
         });
 
-        // IMPORTANT: Ensure defaultPrices array is not overwritten with empty when saving
         function saveToCloud() { 
             dbRef.set({ 
                 places: state.places, 
@@ -254,19 +253,24 @@
                 content = `${closeBtnHTML}<h3>Edit Place</h3><input id="pName" value="${targetIdx}" placeholder="Place Name"><button class="btn-save" onclick="saveEditedPlace('${targetIdx}')">Update Place</button>`;
             }
             else if(type === 'customer') {
-                let options = state.places.map(p => `<option value="${p}" ${p === activePlace ? 'selected' : ''}>${p}</option>`).join('');
+                let options = state.places.slice().reverse().map(p => `<option value="${p}" ${p === activePlace ? 'selected' : ''}>${p}</option>`).join('');
                 content = `${closeBtnHTML}<h3>Add Customer</h3>
                 <input id="cName" placeholder="Customer Name">
                 <input id="cPhone" type="text" placeholder="Mobile No. (10 Digits)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                <select id="cPlace">${options}</select><button class="btn-save" onclick="addCustomer()">Save Data</button>`;
+                <select id="cPlace">${options}</select>
+                <input id="cNearby" type="text" placeholder="Nearby Landmark (Optional)">
+                <button class="btn-save" onclick="addCustomer()">Save Data</button>`;
             } 
             else if(type === 'editCustomer') {
                 let c = state.customers[targetIdx];
-                let options = state.places.map(p => `<option value="${p}" ${p === c.place ? 'selected' : ''}>${p}</option>`).join('');
+                // Places map without reverse so selection works smoothly, or with reverse it's fine.
+                let options = state.places.slice().reverse().map(p => `<option value="${p}" ${p === c.place ? 'selected' : ''}>${p}</option>`).join('');
                 content = `${closeBtnHTML}<h3>Edit Customer</h3>
                 <input id="cName" value="${c.name}">
                 <input id="cPhone" type="text" value="${c.phone}" placeholder="Mobile No. (10 Digits)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                <select id="cPlace">${options}</select><button class="btn-save" onclick="saveEditedCustomer(${targetIdx})">Update Details</button>`;
+                <select id="cPlace">${options}</select>
+                <input id="cNearby" type="text" value="${c.nearby || ''}" placeholder="Nearby Landmark (Optional)">
+                <button class="btn-save" onclick="saveEditedCustomer(${targetIdx})">Update Details</button>`;
             }
             else if(type === 'priceList') {
                 editingPriceIdx = -1;
@@ -301,8 +305,6 @@
                 tempBillTotal = 0;
                 let c = state.customers[targetIdx];
                 
-                // --- SMART PRICE LIST FALLBACK LOGIC ---
-                // Agar customer ka price list hai toh wo lo, warna default (global) prices lo
                 let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
                 
                 if(pList.length === 0) {
@@ -352,7 +354,6 @@
                 let prevDueText = prevDue > 0 ? `<span style="color:var(--danger)">₹${prevDue} (Due)</span>` : (prevDue < 0 ? `<span style="color:var(--success)">+₹${Math.abs(prevDue)} (Advance)</span>` : `<span style="color:#aaa;">₹0</span>`);
                 let closeBalText = closingBal > 0 ? `<span style="color:var(--danger)">₹${closingBal} (Due)</span>` : (closingBal < 0 ? `<span style="color:var(--success)">+₹${Math.abs(closingBal)} (Advance)</span>` : `<span style="color:#aaa;">₹0 (Clear)</span>`);
 
-                // Convert \n to <br> for HTML display
                 let formattedProd = h.prod ? h.prod.replace(/\n/g, '<br>') : '';
 
                 content = `${closeBtnHTML}
@@ -486,15 +487,21 @@
         }
 
         function addCustomer() { 
-            let name = autoCapitalize(document.getElementById('cName').value.trim()), phone = document.getElementById('cPhone').value, place = document.getElementById('cPlace').value;
+            let name = autoCapitalize(document.getElementById('cName').value.trim());
+            let phone = document.getElementById('cPhone').value;
+            let place = document.getElementById('cPlace').value;
+            let nearby = autoCapitalize(document.getElementById('cNearby').value.trim()); // New Nearby Add
             if(!name || !place || phone.length !== 10) return;
-            state.customers.push({name, phone, place, history: [], priceList: []}); saveToCloud(); closeModal();
+            state.customers.push({name, phone, place, nearby, history: [], priceList: []}); 
+            saveToCloud(); closeModal();
         }
         function saveEditedCustomer(idx) {
             let phone = document.getElementById('cPhone').value;
             if(phone.length !== 10) return;
             state.customers[idx].name = autoCapitalize(document.getElementById('cName').value.trim());
-            state.customers[idx].phone = phone; state.customers[idx].place = document.getElementById('cPlace').value;
+            state.customers[idx].phone = phone; 
+            state.customers[idx].place = document.getElementById('cPlace').value;
+            state.customers[idx].nearby = autoCapitalize(document.getElementById('cNearby').value.trim()); // New Nearby Update
             saveToCloud(); closeModal();
         }
         function deleteCustomer(idx) {
@@ -508,7 +515,6 @@
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
             
-            // Map items with Newlines instead of Plus signs
             let prodString = tempBillItems.map(i => `${i.name} (x${i.qty}) = ₹${i.total}`).join('\n');
 
             if(tempBillItems.length === 0) {
@@ -529,7 +535,7 @@
                     if (!t.prod || t.prod === "Cash Payment") {
                         t.prod = prodString; 
                     } else {
-                        t.prod = t.prod + "\n" + prodString; // Append with Newline
+                        t.prod = t.prod + "\n" + prodString; 
                     }
                 } else if(!t.prod) {
                     t.prod = "Cash Payment";
@@ -558,13 +564,15 @@
         }
 
         // =======================
-        // RENDER UI
+        // RENDER UI (REVERSED LISTS)
         // =======================
         function render() {
             let searchP = document.getElementById('searchPlace').value.toLowerCase();
             let searchC = document.getElementById('searchCust').value.toLowerCase();
 
-            document.getElementById('placeList').innerHTML = state.places.filter(p => p.toLowerCase().includes(searchP)).map(p => `
+            // Reverse Places list so newly added comes on top
+            let filteredPlaces = state.places.filter(p => p.toLowerCase().includes(searchP));
+            document.getElementById('placeList').innerHTML = filteredPlaces.slice().reverse().map(p => `
                 <div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">
                     <div>📍 ${p}</div>
                     <div class="item-actions">
@@ -574,10 +582,12 @@
                 </div>
             `).join('');
 
+            // Reverse Customer list so newly added comes on top
             let filteredCust = (searchC.trim() !== '') ? state.customers.filter(c => c.name.toLowerCase().includes(searchC) || (c.phone && c.phone.includes(searchC))) : (activePlace ? state.customers.filter(c => c.place === activePlace) : []);
             
-            document.getElementById('customerList').innerHTML = filteredCust.map(c => {
-                let realIdx = state.customers.indexOf(c);
+            document.getElementById('customerList').innerHTML = filteredCust.slice().reverse().map(c => {
+                let realIdx = state.customers.indexOf(c); // Keeps original index connection safe
+                let nearbyTag = c.nearby ? ` <span style="font-size: 0.8rem; color:#888;">(Near: ${c.nearby})</span>` : '';
                 return `
                 <div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
                     <div>👤 ${c.name} ${(searchC.trim() !== '') ? `<span class="place-tag">📍 ${c.place}</span>` : ''}</div>
@@ -628,11 +638,14 @@
                     datesListHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Abhi tak koi transaction nahi hai.</div>';
                 }
 
+                // Append nearby text nicely in details header
+                let nearbyText = c.nearby ? ` (Near: ${c.nearby})` : '';
+
                 document.getElementById('detailsBox').innerHTML = `
                     <div class="cust-header">
                         <button class="price-corner-btn" onclick="openModal('priceList', ${activeCustomerIdx})" title="Price List Setup">📜</button>
                         <div style="font-size: 2.2rem; font-weight:bold; margin-bottom: 5px; max-width:85%;">👤 ${c.name}</div>
-                        <div style="font-size: 1.1rem; color: #ccc; margin-bottom: 30px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}</div>
+                        <div style="font-size: 1.1rem; color: #ccc; margin-bottom: 30px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}${nearbyText}</div>
                         ${dueStatusHTML}
                     </div>
                     <div style="padding: 10px 0;">
