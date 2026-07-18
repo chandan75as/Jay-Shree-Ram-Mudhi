@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Price List - Jay Shree Ram Mudhi</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-maroon: #5E1914;
+            --gold: #D4AF37;
+            --white: #FDF7E3;
+            --active-bg: rgba(212, 175, 55, 0.2);
+            --danger: #ff4d4d;
+            --success: #28a745;
+            --edit: #4da6ff;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 18px; }
+        
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2.2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; }
+        
+        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 1.2rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
+
+        /* Main Container */
+        .main-container { display: flex; flex-direction: column; align-items: center; padding: 30px; flex: 1; overflow-y: auto; }
+        
+        .price-card { background: rgba(0,0,0,0.3); border: 2px solid var(--gold); border-radius: 12px; width: 100%; max-width: 600px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        
+        /* Add Form Area */
+        .add-form { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
+        input { flex: 1; padding: 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.2rem; text-transform: capitalize; }
+        .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 12px 20px; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        
+        /* Price List Area */
+        .list-header { font-size: 1.5rem; color: var(--gold); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        
+        .price-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; }
+        .price-item:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
+        
+        .prod-name { font-size: 1.3rem; font-weight: bold; }
+        .prod-rate { font-size: 1.3rem; color: var(--gold); font-weight: bold; }
+        
+        .actions { display: flex; gap: 10px; }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; padding: 5px; }
+        .btn-icon.edit { color: var(--edit); }
+        .btn-icon.del { color: var(--danger); }
+
+        #dbStatus { font-size: 1rem; color: #aaa; text-align: center; margin-top: 10px; font-weight: bold; }
+        
+        /* Edit Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 350px; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; }
+        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.2rem; border-radius: 6px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">⬅ Back to Home</a>
+        <h1 class="header-title">Our Global Price List</h1>
+        <div style="width: 100px;"></div> <!-- Spacer for centering -->
+    </header>
+
+    <div id="dbStatus">Loading Cloud Data... ⏳</div>
+
+    <div class="main-container">
+        <div class="price-card">
+            
+            <div class="add-form">
+                <input type="text" id="newProdName" placeholder="Product Name (e.g. Dasi Mudhi)">
+                <input type="number" id="newProdRate" placeholder="Rate (₹)" style="max-width: 120px;">
+                <button class="btn-add" onclick="addGlobalPrice()">+ Add</button>
+            </div>
+
+            <div class="list-header">📜 All Products & Rates</div>
+            
+            <div id="globalPriceList">
+                <!-- Prices will load here -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            <h3 style="color:var(--gold); text-align:center; margin-top:0;">Edit Product Rate</h3>
+            <input type="hidden" id="editIndex">
+            <input type="text" id="editProdName" placeholder="Product Name">
+            <input type="number" id="editProdRate" placeholder="Rate (₹)">
+            <button class="btn-save" onclick="saveEditedPrice()">Update Rate</button>
+        </div>
+    </div>
+
+    <script>
+        function autoCapitalize(text) {
+            if (!text) return text;
+            return text.replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        // ==========================================
+        // FIREBASE SETUP
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
+            authDomain: "jay-shree-ram-mudhi.firebaseapp.com",
+            databaseURL: "https://jay-shree-ram-mudhi-default-rtdb.firebaseio.com",
+            projectId: "jay-shree-ram-mudhi",
+            storageBucket: "jay-shree-ram-mudhi.firebasestorage.app",
+            messagingSenderId: "146218859864",
+            appId: "1:146218859864:web:56a4dac1c0c20a3281b92d",
+            measurementId: "G-Z86Z8VSQKT"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dbRef = database.ref('appData/mainState');
+
+        let state = { places: [], customers: [], defaultPrices: [] };
+        
+        // CLOUD SYNC
+        dbRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                let cloudData = snapshot.val();
+                state.places = cloudData.places || [];
+                state.customers = cloudData.customers || [];
+                state.defaultPrices = cloudData.defaultPrices || []; // Naya array global prices ke liye
+            } 
+            document.getElementById('dbStatus').innerHTML = "Cloud Synced 🟢";
+            document.getElementById('dbStatus').style.color = "#4CAF50";
+            renderPrices(); 
+        }, (error) => {
+            document.getElementById('dbStatus').innerHTML = "Database Error 🔴";
+            document.getElementById('dbStatus').style.color = "#ff4d4d";
+        });
+
+        function saveToCloud() { 
+            dbRef.set(state).catch((error) => { alert("Data save nahi hua!"); });
+        }
+
+        // ==========================================
+        // ADD, EDIT, DELETE LOGIC
+        // ==========================================
+        function addGlobalPrice() {
+            let name = autoCapitalize(document.getElementById('newProdName').value.trim());
+            let rate = parseFloat(document.getElementById('newProdRate').value);
+            
+            if(!name || isNaN(rate)) {
+                alert("Product ka naam aur price sahi se daalein!");
+                return;
+            }
+
+            if(!state.defaultPrices) state.defaultPrices = [];
+            
+            // Duplicate check
+            if(state.defaultPrices.find(p => p.prodName.toLowerCase() === name.toLowerCase())) {
+                alert("Yeh product pehle se list mein hai!");
+                return;
+            }
+
+            state.defaultPrices.push({ prodName: name, rate: rate });
+            
+            document.getElementById('newProdName').value = "";
+            document.getElementById('newProdRate').value = "";
+            saveToCloud();
+        }
+
+        function deleteGlobalPrice(index) {
+            if(confirm("Kya aap sach mein is product ko list se hatana chahte hain?")) {
+                state.defaultPrices.splice(index, 1);
+                saveToCloud();
+            }
+        }
+
+        function openEditModal(index) {
+            let p = state.defaultPrices[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editProdName').value = p.prodName;
+            document.getElementById('editProdRate').value = p.rate;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function saveEditedPrice() {
+            let index = document.getElementById('editIndex').value;
+            let name = autoCapitalize(document.getElementById('editProdName').value.trim());
+            let rate = parseFloat(document.getElementById('editProdRate').value);
+
+            if(!name || isNaN(rate)) return;
+
+            state.defaultPrices[index] = { prodName: name, rate: rate };
+            closeEditModal();
+            saveToCloud();
+        }
+
+        // ==========================================
+        // RENDER UI
+        // ==========================================
+        function renderPrices() {
+            let listDiv = document.getElementById('globalPriceList');
+            let pList = state.defaultPrices || [];
+
+            if (pList.length === 0) {
+                listDiv.innerHTML = '<div style="text-align:center; color:#aaa; font-style:italic; padding: 20px;">Abhi koi product add nahi kiya gaya hai.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = pList.map((p, index) => `
+                <div class="price-item">
+                    <div class="prod-name">${p.prodName}</div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div class="prod-rate">₹${p.rate}</div>
+                        <div class="actions">
+                            <button class="btn-icon edit" onclick="openEditModal(${index})" title="Edit Price">✏️</button>
+                            <button class="btn-icon del" onclick="deleteGlobalPrice(${index})" title="Delete Product">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('editModal').style.display === 'flex') {
+                    saveEditedPrice();
+                } else {
+                    let act = document.activeElement;
+                    if(act.id === 'newProdName' || act.id === 'newProdRate') {
+                        addGlobalPrice();
+                    }
+                }
+            } else if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
