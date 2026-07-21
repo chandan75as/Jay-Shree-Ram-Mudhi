@@ -24,20 +24,21 @@
         
         /* Header */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
-        .header-title { color: var(--gold); font-size: 2.5rem; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .header-title { color: var(--gold); font-size: 2.5rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; }
         .header-left, .header-right { display: flex; gap: 15px; align-items: center; }
         
-        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 28px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; }
+        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 28px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; transition: 0.2s;}
+        .header-btn:hover { transform: scale(1.05); }
         .edit-toggle-btn { background: transparent; border: 2px solid var(--gold); color: var(--gold); font-size: 24px; }
         .edit-toggle-btn.active { background: var(--danger); border-color: var(--danger); color: white; }
 
         /* Dropdowns */
         .dropdown-container { position: relative; }
-        .dropdown { display: none; position: absolute; top: 65px; background: #333; border: 1px solid var(--gold); min-width: 220px; border-radius: 8px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .dropdown { display: none; position: absolute; top: 65px; background: #333; border: 1px solid var(--gold); min-width: 220px; border-radius: 8px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden;}
         .dropdown.left-drop { left: 0; }
         .dropdown.right-drop { right: 0; }
         .dropdown a { display: block; padding: 15px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; font-size: 1.1rem; }
-        .dropdown a:hover { background: var(--gold); color: var(--bg-maroon); }
+        .dropdown a:hover { background: var(--gold); color: var(--bg-maroon); font-weight: bold;}
 
         /* Grid */
         .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 25px; gap: 25px; }
@@ -55,8 +56,10 @@
         /* Actions */
         .item-actions { display: none; gap: 10px; }
         .edit-mode .item-actions { display: flex; }
-        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
-        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 2px 5px; }
+        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.2s;}
+        .btn-small:hover { filter: brightness(1.2); }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 2px 5px; transition: transform 0.2s;}
+        .btn-icon:hover { transform: scale(1.2); }
         .btn-icon.edit { color: var(--edit); }
         .btn-icon.del { color: var(--danger); }
         
@@ -65,8 +68,8 @@
         .price-corner-btn { position: absolute; right: 15px; top: 15px; font-size: 30px; background: none; border: none; cursor: pointer; transition: 0.2s; z-index: 2; }
         .price-corner-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--gold)); }
         
-        /* Corner Due Display Fixed Overlay */
-        .due-corner { position: absolute; right: 15px; bottom: 15px; font-size: 1.4rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 6px; z-index: 2;}
+        /* Corner Due Display */
+        .due-corner { position: absolute; right: 15px; bottom: 15px; font-size: 1.4rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 6px; z-index: 2; border: 1px solid;}
         .place-tag { font-size: 0.9rem; color: #ccc; margin-left: 8px; font-weight: normal; }
 
         /* Date Rows */
@@ -83,24 +86,40 @@
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 450px; position: relative; max-height: 90vh; overflow-y: auto;}
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 450px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         
         .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; z-index:10; }
         .close-btn:hover { color: var(--danger); transform: scale(1.1); }
         
         .modal-content h3 { font-size: 1.8rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; font-family: inherit; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; font-family: inherit; outline: none; transition: border-color 0.2s;}
+        input:focus, select:focus, textarea:focus { border-color: #fff; }
         textarea { resize: vertical; }
         input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.4rem; text-align: right; }
         
         #pName, #cName, #cNearby { text-transform: capitalize; }
-        .btn-save { width: 100%; padding: 15px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.4rem; border-radius: 6px; }
+        .btn-save { width: 100%; padding: 15px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.4rem; border-radius: 6px; transition: 0.2s;}
+        .btn-save:hover { filter: brightness(1.1); }
         
-        #dbStatus { font-size: 1rem; color: #aaa; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
+        #dbStatus { font-size: 1.1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
 
-        /* Cart styling */
         .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #555; padding: 8px 0; font-size:1.1rem; }
+
+        /* CUSTOM TOAST NOTIFICATION STYLES */
+        #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
+        .toast { background: #333; color: white; padding: 12px 25px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.info { border-left-color: #4da6ff; }
+        
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -119,7 +138,7 @@
 
         <div>
             <h1 class="header-title">Jay Shree Ram Mudhi</h1>
-            <div id="dbStatus">Loading Cloud Data... ⏳</div>
+            <div id="dbStatus">Loading Data... ⏳</div>
         </div>
 
         <div class="header-right">
@@ -127,9 +146,9 @@
                 <button class="header-btn" onclick="toggleMenu('mainDrop', event)">☰</button>
                 <div id="mainDrop" class="dropdown right-drop">
                     <a href="price.html">Our Price List</a>
-                    <a onclick="alert('Staff Management - Coming Soon!')">Staff Management</a>
+                    <a onclick="showToast('Staff Management jald hi aayega!', 'info')">Staff Management</a>
                     <a href="calculation.html">Total Calculation</a>
-                    <a onclick="alert('Billing System - Coming Soon!')">Billing</a>
+                    <a onclick="showToast('Billing Printer jald hi aayega!', 'info')">Billing</a>
                 </div>
             </div>
         </div>
@@ -161,14 +180,37 @@
         <div class="modal-content" id="modalContent"></div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastBox"></div>
+
     <script>
+        // ==========================================
+        // CUSTOM TOAST NOTIFICATION SYSTEM
+        // ==========================================
+        function showToast(msg, type = 'info') {
+            let toastBox = document.getElementById('toastBox');
+            let toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            
+            let icon = 'ℹ️';
+            if(type === 'success') icon = '✅';
+            if(type === 'error') icon = '⚠️';
+            
+            toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+            toastBox.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
         function autoCapitalize(text) {
             if (!text) return text;
             return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
         // ==========================================
-        // FIREBASE SETUP
+        // FIREBASE SETUP & OFFLINE SYNC LOGIC
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
@@ -193,31 +235,79 @@
         let tempBillItems = [];
         let tempBillTotal = 0;
         let editingPriceIdx = -1;
-        
-        // CLOUD SYNC
+
+        let localData = localStorage.getItem('jsrm_state');
+        if (localData) {
+            state = JSON.parse(localData);
+            render();
+        }
+
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
-                let cloudData = snapshot.val();
-                state.places = cloudData.places || [];
-                state.customers = cloudData.customers || [];
-                state.defaultPrices = cloudData.defaultPrices || []; 
-            } else { 
+                if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
+                    saveToCloud(); 
+                } else {
+                    let cloudData = snapshot.val();
+                    state.places = cloudData.places || [];
+                    state.customers = cloudData.customers || [];
+                    state.defaultPrices = cloudData.defaultPrices || []; 
+                    
+                    localStorage.setItem('jsrm_state', JSON.stringify(state));
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    
+                    updateNetworkStatus(true);
+                    render(); 
+                }
+            } else if(!localData) { 
                 state = { places: [], customers: [], defaultPrices: [] }; 
             }
-            document.getElementById('dbStatus').innerHTML = "Cloud Synced 🟢";
-            document.getElementById('dbStatus').style.color = "#4CAF50";
-            render(); 
-        }, (error) => {
-            document.getElementById('dbStatus').innerHTML = "Database Error 🔴";
-            document.getElementById('dbStatus').style.color = "#ff4d4d";
         });
 
         function saveToCloud() { 
-            dbRef.set({ 
-                places: state.places, 
-                customers: state.customers,
-                defaultPrices: state.defaultPrices || []
-            }).catch((error) => { alert("Data save nahi hua!"); });
+            localStorage.setItem('jsrm_state', JSON.stringify(state));
+            localStorage.setItem('jsrm_sync_pending', 'true');
+            render(); 
+
+            if (navigator.onLine) {
+                dbRef.set({ 
+                    places: state.places, 
+                    customers: state.customers,
+                    defaultPrices: state.defaultPrices || []
+                }).then(() => {
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    updateNetworkStatus(true);
+                }).catch((error) => { 
+                    updateNetworkStatus(false);
+                });
+            } else {
+                updateNetworkStatus(false);
+            }
+        }
+
+        window.addEventListener('online', () => {
+            showToast("Internet wapas aa gaya! Sync shuru...", "success");
+            if (localStorage.getItem('jsrm_sync_pending') === 'true') {
+                document.getElementById('dbStatus').innerHTML = "Syncing to Cloud... ⏳";
+                saveToCloud(); 
+            } else {
+                updateNetworkStatus(true);
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            showToast("Internet band hai! Ab data phone mein save hoga.", "error");
+            updateNetworkStatus(false);
+        });
+
+        function updateNetworkStatus(isOnline) {
+            let statusEl = document.getElementById('dbStatus');
+            if(isOnline) {
+                statusEl.innerHTML = "Cloud Synced 🟢";
+                statusEl.style.color = "#4CAF50";
+            } else {
+                statusEl.innerHTML = "Offline Mode (Locally Saved) 📴";
+                statusEl.style.color = "#ff9800";
+            }
         }
 
         // ==========================================
@@ -227,6 +317,7 @@
             isEditMode = !isEditMode;
             document.body.classList.toggle('edit-mode', isEditMode);
             document.getElementById('editToggleBtn').classList.toggle('active', isEditMode);
+            if(isEditMode) showToast("Edit Mode ON: Ab aap Delete ya Edit kar sakte hain.", "info");
         }
 
         function toggleMenu(menuId, e) { 
@@ -241,6 +332,13 @@
         function openModal(type, targetIdx = null, transIdx = null) {
             document.getElementById('addDrop').style.display = 'none';
             document.getElementById('mainDrop').style.display = 'none';
+            
+            if (type === 'customer' && state.places.length === 0) {
+                showToast("Pehle kam se kam ek 'Place' (Jagah) banayein!", "error");
+                openModal('place');
+                return;
+            }
+
             document.getElementById('modal').style.display = 'flex';
             
             let closeBtnHTML = `<span class="close-btn" onclick="closeModal()" title="Close">&times;</span>`;
@@ -263,7 +361,6 @@
             } 
             else if(type === 'editCustomer') {
                 let c = state.customers[targetIdx];
-                // Places map without reverse so selection works smoothly, or with reverse it's fine.
                 let options = state.places.slice().reverse().map(p => `<option value="${p}" ${p === c.place ? 'selected' : ''}>${p}</option>`).join('');
                 content = `${closeBtnHTML}<h3>Edit Customer</h3>
                 <input id="cName" value="${c.name}">
@@ -309,7 +406,7 @@
                 
                 if(pList.length === 0) {
                     content = `${closeBtnHTML}<h3>New Bill</h3>
-                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Menu se pehle 'Our Price List' set karein ya Customer ki list banayein!</p>`;
+                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Main Menu se pehle 'Our Price List' set karein!</p>`;
                 } else {
                     let listType = (c.priceList && c.priceList.length > 0) ? "Customer Price List" : "Global Price List";
                     let options = pList.map((p, i) => `<option value="${i}">${p.prodName} (₹${p.rate})</option>`).join('');
@@ -324,7 +421,7 @@
                                        ${options}
                                    </select>
                                    <input id="billQty" type="number" placeholder="Qty" style="margin:0; flex:1;">
-                                   <button id="addBtn" onclick="addBillItem(${targetIdx})" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:12px; cursor:pointer; font-weight:bold; font-size:1.1rem;">+ Add</button>
+                                   <button id="addBtn" onclick="addBillItem(${targetIdx})" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:12px; cursor:pointer; font-weight:bold; font-size:1.1rem; transition:0.2s;">+ Add</button>
                                </div>
                                <hr style="border-color:var(--gold); margin-bottom:15px;">
                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -332,7 +429,7 @@
                                    <input id="amt" value="₹0" readonly style="width:140px; margin:0;">
                                </div>
                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                   <span style="font-size:1.2rem;">Paid Amount:</span>
+                                   <span style="font-size:1.2rem;">Jama Amount (Paid):</span>
                                    <input id="paid" type="number" placeholder="0" style="width:140px; margin:0; font-weight:bold; font-size:1.4rem;">
                                </div>
                                <button class="btn-save" onclick="addTrans(${targetIdx})">Save Final Bill</button>`;
@@ -361,22 +458,22 @@
                     <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--gold); position:relative;">
                         
                         <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom: 15px; border-bottom:1px solid #555; padding-bottom:10px;">
-                            <button class="btn-icon edit" onclick="openModal('editTrans', ${targetIdx}, ${hIdx})" title="Edit Aaj ka Record">✏️ Edit Day</button>
-                            <button class="btn-icon del" onclick="deleteTrans(${targetIdx}, ${hIdx})" title="Delete Aaj ka Record">🗑️ Delete Day</button>
+                            <button class="btn-icon edit" onclick="openModal('editTrans', ${targetIdx}, ${hIdx})" title="Edit Record">✏️ Edit Record</button>
+                            <button class="btn-icon del" onclick="deleteTrans(${targetIdx}, ${hIdx})" title="Delete Record">🗑️ Delete Record</button>
                         </div>
                         
                         <div class="d-row" style="flex-direction:column;">
-                            <span style="margin-bottom:5px; color:var(--gold);">🛒 Items Bought:</span>
+                            <span style="margin-bottom:5px; color:var(--gold);">🛒 Items Bought (Time Ke Sath):</span>
                             <div class="prod-list-box">
-                                ${formattedProd || '<span style="color:#aaa;">Cash Payment</span>'}
+                                ${formattedProd || '<span style="color:#aaa;">Koi product nahi.</span>'}
                             </div>
                         </div>
                         
                         <hr style="border-color:#555; margin:15px 0;">
                         
                         <div class="d-row"><span>🕒 Pichla Baki (Prev Due):</span> <b>${prevDueText}</b></div>
-                        <div class="d-row"><span>📝 Aaj Ka Bill:</span> <b>₹${h.amt}</b></div>
-                        <div class="d-row"><span>💰 Aaj Jama Kiya (Paid):</span> <b style="color:var(--success)">₹${h.paid}</b></div>
+                        <div class="d-row"><span>📝 Bill Amount:</span> <b>₹${h.amt}</b></div>
+                        <div class="d-row"><span>💰 Jama Kiya (Paid):</span> <b style="color:var(--success)">₹${h.paid}</b></div>
                         
                         <hr style="border-color:var(--gold); margin:15px 0;">
                         
@@ -389,7 +486,7 @@
             else if(type === 'editTrans') {
                 let t = state.customers[targetIdx].history[transIdx];
                 content = `${closeBtnHTML}<h3>Edit Daily Record</h3>
-                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh aaj ka poora hisaab edit karega)</p>
+                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh is din ka poora hisaab edit karega)</p>
                            <textarea id="prod" rows="5" placeholder="Product Details (Ek ke neeche ek likhein)">${t.prod}</textarea>
                            <input id="amt" type="number" value="${t.amt}" placeholder="Total Bill Amount (₹)">
                            <input id="paid" type="number" value="${t.paid}" placeholder="Amount Paid (₹)">
@@ -406,7 +503,15 @@
         function addBillItem(cIdx) {
             let sel = document.getElementById('billProd');
             let qtyInput = document.getElementById('billQty');
-            if(sel.value === "" || isNaN(qtyInput.value) || qtyInput.value <= 0) return;
+            
+            if(sel.value === "") {
+                showToast("Pehle koi product chunein!", "error");
+                return;
+            }
+            if(isNaN(qtyInput.value) || qtyInput.value <= 0) {
+                showToast("Sahi quantity dalein!", "error");
+                return;
+            }
             
             let c = state.customers[cIdx];
             let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
@@ -450,38 +555,63 @@
         function addPrice(cIdx) {
             let n = autoCapitalize(document.getElementById('newPName').value.trim());
             let r = parseFloat(document.getElementById('newPRate').value);
-            if(!n || isNaN(r)) return;
+            
+            if(!n) { showToast("Product ka naam likhein!", "error"); return; }
+            if(isNaN(r) || r < 0) { showToast("Sahi rate (₹) dalein!", "error"); return; }
             
             if(!state.customers[cIdx].priceList) state.customers[cIdx].priceList = [];
             
             if(editingPriceIdx > -1) {
                 state.customers[cIdx].priceList[editingPriceIdx] = { prodName: n, rate: r };
+                showToast("Rate update ho gaya!", "success");
             } else {
                 state.customers[cIdx].priceList.push({ prodName: n, rate: r });
+                showToast("Naya rate save ho gaya!", "success");
             }
             editingPriceIdx = -1;
             saveToCloud(); openModal('priceList', cIdx); 
         }
-        function deletePrice(cIdx, pIdx) { state.customers[cIdx].priceList.splice(pIdx, 1); saveToCloud(); openModal('priceList', cIdx); }
+        function deletePrice(cIdx, pIdx) { 
+            state.customers[cIdx].priceList.splice(pIdx, 1); 
+            showToast("Rate delete ho gaya!", "success");
+            saveToCloud(); openModal('priceList', cIdx); 
+        }
         
         function addPlace() { 
             let p = autoCapitalize(document.getElementById('pName').value.trim()); 
-            if(!p || state.places.find(x => x.toLowerCase() === p.toLowerCase())) return;
-            state.places.push(p); saveToCloud(); closeModal();
+            if(!p) { showToast("Place ka naam khali nahi chhod sakte!", "error"); return; }
+            if(state.places.find(x => x.toLowerCase() === p.toLowerCase())) {
+                showToast("Yeh jagah pehle se list mein hai!", "error"); return;
+            }
+            state.places.push(p); 
+            showToast("Nayi jagah list mein add ho gayi!", "success");
+            saveToCloud(); closeModal();
         }
         function saveEditedPlace(oldName) {
             let newName = autoCapitalize(document.getElementById('pName').value.trim()); 
-            if(!newName || newName === oldName) { closeModal(); return; }
+            if(!newName) { showToast("Naam khali nahi ho sakta!", "error"); return; }
+            if(newName === oldName) { closeModal(); return; }
+            
             let idx = state.places.indexOf(oldName);
             if(idx > -1) state.places[idx] = newName;
             state.customers.forEach(c => { if(c.place === oldName) c.place = newName; });
             if(activePlace === oldName) activePlace = newName;
+            
+            showToast("Jagah ka naam update ho gaya!", "success");
             saveToCloud(); closeModal();
         }
+
         function deletePlace(p) {
-            if(confirm(`Kya aap sach mein ${p} ko delete karna chahte hain?`)) {
+            if(confirm(`Kya aap sach mein '${p}' ko delete karna chahte hain?\nYahan ke sabhi customers 'Uncategorized' mein chale jayenge.`)) {
                 state.places = state.places.filter(x => x !== p);
+                
+                if(!state.places.includes("Uncategorized")) { state.places.push("Uncategorized"); }
+                
+                state.customers.forEach(c => { if(c.place === p) c.place = "Uncategorized"; });
+                
                 if(activePlace === p) { activePlace = null; activeCustomerIdx = null; }
+                
+                showToast("Jagah delete ho gayi!", "success");
                 saveToCloud();
             }
         }
@@ -490,38 +620,59 @@
             let name = autoCapitalize(document.getElementById('cName').value.trim());
             let phone = document.getElementById('cPhone').value;
             let place = document.getElementById('cPlace').value;
-            let nearby = autoCapitalize(document.getElementById('cNearby').value.trim()); // New Nearby Add
-            if(!name || !place || phone.length !== 10) return;
+            let nearby = autoCapitalize(document.getElementById('cNearby').value.trim());
+            
+            if(!name) { showToast("Customer ka naam zaroori hai!", "error"); return; }
+            if(!place) { showToast("Customer ki jagah (Place) chunein!", "error"); return; }
+            if(phone && phone.length !== 10) { showToast("Mobile number 10 digits ka hona chahiye!", "error"); return; }
+            
             state.customers.push({name, phone, place, nearby, history: [], priceList: []}); 
+            showToast("Naya Customer add ho gaya!", "success");
             saveToCloud(); closeModal();
         }
         function saveEditedCustomer(idx) {
+            let name = autoCapitalize(document.getElementById('cName').value.trim());
             let phone = document.getElementById('cPhone').value;
-            if(phone.length !== 10) return;
-            state.customers[idx].name = autoCapitalize(document.getElementById('cName').value.trim());
+            
+            if(!name) { showToast("Customer ka naam zaroori hai!", "error"); return; }
+            if(phone && phone.length !== 10) { showToast("Mobile number 10 digits ka hona chahiye!", "error"); return; }
+            
+            state.customers[idx].name = name;
             state.customers[idx].phone = phone; 
             state.customers[idx].place = document.getElementById('cPlace').value;
-            state.customers[idx].nearby = autoCapitalize(document.getElementById('cNearby').value.trim()); // New Nearby Update
+            state.customers[idx].nearby = autoCapitalize(document.getElementById('cNearby').value.trim());
+            
+            showToast("Customer details update ho gayi!", "success");
             saveToCloud(); closeModal();
         }
         function deleteCustomer(idx) {
-            if(confirm(`Kya aap sach mein customer ${state.customers[idx].name} ko delete karna chahte hain?`)) {
-                state.customers.splice(idx, 1); activeCustomerIdx = null; saveToCloud();
+            if(confirm(`Kya aap sach mein customer '${state.customers[idx].name}' ko delete karna chahte hain?`)) {
+                state.customers.splice(idx, 1); activeCustomerIdx = null; 
+                showToast("Customer Delete ho gaya!", "success");
+                saveToCloud();
             }
         }
 
-        // ONE ROW PER DATE SMART MERGING LOGIC
+        // =======================
+        // TRANSACTION (BILLING) LOGIC
+        // =======================
         function addTrans(idx) { 
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
             
-            let prodString = tempBillItems.map(i => `${i.name} (x${i.qty}) = ₹${i.total}`).join('\n');
+            let timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
+            
+            let prodString = tempBillItems.map(i => `${i.name} (x${i.qty})`).join(', ');
+            
+            if(prodString !== "") {
+                prodString = `🕒 ${timeNow} : ${prodString} = ₹${amt}`; 
+            }
 
             if(tempBillItems.length === 0) {
                 if(paid > 0) {
-                    prodString = "Cash Payment";
+                    prodString = `🕒 ${timeNow} : Cash Deposit (₹${paid})`; 
                 } else {
-                    alert("Bhai, kam se kam product chuno ya Paisa (Paid Amount) daalo!"); return; 
+                    showToast("Koi product chunein ya Jama Amount daalein!", "error"); return; 
                 }
             }
             
@@ -531,14 +682,10 @@
             
             if(existingIdx > -1) {
                 let t = state.customers[idx].history[existingIdx];
-                if(prodString !== "Cash Payment") {
-                    if (!t.prod || t.prod === "Cash Payment") {
-                        t.prod = prodString; 
-                    } else {
-                        t.prod = t.prod + "\n" + prodString; 
-                    }
-                } else if(!t.prod) {
-                    t.prod = "Cash Payment";
+                if (!t.prod) {
+                    t.prod = prodString; 
+                } else {
+                    t.prod = t.prod + "\n" + prodString; 
                 }
                 t.amt = (parseFloat(t.amt) || 0) + amt;
                 t.paid = (parseFloat(t.paid) || 0) + paid;
@@ -546,6 +693,7 @@
                 state.customers[idx].history.push({prod: prodString, amt: amt, paid: paid, date: today}); 
             }
             
+            showToast("Hisaab Save Ho Gaya! ✅", "success");
             saveToCloud(); closeModal();
         }
         
@@ -553,48 +701,47 @@
             state.customers[cIdx].history[tIdx].prod = document.getElementById('prod').value.trim();
             state.customers[cIdx].history[tIdx].amt = parseFloat(document.getElementById('amt').value) || 0;
             state.customers[cIdx].history[tIdx].paid = parseFloat(document.getElementById('paid').value) || 0;
+            showToast("Record Update Ho Gaya!", "success");
             saveToCloud(); closeModal();
         }
         
         function deleteTrans(cIdx, tIdx) {
             if(confirm("Dhyan rahe: Kya aap is din ka poora record delete karna chahte hain?")) { 
                 state.customers[cIdx].history.splice(tIdx, 1); 
+                showToast("Record delete ho gaya!", "success");
                 saveToCloud(); closeModal(); 
             }
         }
 
         // =======================
-        // RENDER UI (REVERSED LISTS)
+        // RENDER UI 
         // =======================
         function render() {
             let searchP = document.getElementById('searchPlace').value.toLowerCase();
             let searchC = document.getElementById('searchCust').value.toLowerCase();
 
-            // Reverse Places list so newly added comes on top
             let filteredPlaces = state.places.filter(p => p.toLowerCase().includes(searchP));
             document.getElementById('placeList').innerHTML = filteredPlaces.slice().reverse().map(p => `
                 <div class="item ${activePlace === p ? 'active' : ''}" onclick="selectPlace('${p}')">
                     <div>📍 ${p}</div>
                     <div class="item-actions">
-                        <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editPlace', '${p}')">✏️</button>
-                        <button class="btn-icon del" onclick="event.stopPropagation(); deletePlace('${p}')">🗑️</button>
+                        <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editPlace', '${p}')" title="Edit Place">✏️</button>
+                        <button class="btn-icon del" onclick="event.stopPropagation(); deletePlace('${p}')" title="Delete Place">🗑️</button>
                     </div>
                 </div>
             `).join('');
 
-            // Reverse Customer list so newly added comes on top
             let filteredCust = (searchC.trim() !== '') ? state.customers.filter(c => c.name.toLowerCase().includes(searchC) || (c.phone && c.phone.includes(searchC))) : (activePlace ? state.customers.filter(c => c.place === activePlace) : []);
             
             document.getElementById('customerList').innerHTML = filteredCust.slice().reverse().map(c => {
-                let realIdx = state.customers.indexOf(c); // Keeps original index connection safe
-                let nearbyTag = c.nearby ? ` <span style="font-size: 0.8rem; color:#888;">(Near: ${c.nearby})</span>` : '';
+                let realIdx = state.customers.indexOf(c); 
                 return `
                 <div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
                     <div>👤 ${c.name} ${(searchC.trim() !== '') ? `<span class="place-tag">📍 ${c.place}</span>` : ''}</div>
                     <div style="display:flex; gap:8px;">
                         <div class="item-actions">
-                            <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editCustomer', ${realIdx})">✏️</button>
-                            <button class="btn-icon del" onclick="event.stopPropagation(); deleteCustomer(${realIdx})">🗑️</button>
+                            <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editCustomer', ${realIdx})" title="Edit Customer">✏️</button>
+                            <button class="btn-icon del" onclick="event.stopPropagation(); deleteCustomer(${realIdx})" title="Delete Customer">🗑️</button>
                         </div>
                         <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">New Bill</button>
                     </div>
@@ -638,7 +785,6 @@
                     datesListHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Abhi tak koi transaction nahi hai.</div>';
                 }
 
-                // Append nearby text nicely in details header
                 let nearbyText = c.nearby ? ` (Near: ${c.nearby})` : '';
 
                 document.getElementById('detailsBox').innerHTML = `
@@ -660,7 +806,7 @@
         function selectCustomer(idx) { activeCustomerIdx = idx; activePlace = state.customers[idx].place; render(); }
 
         // ==========================================
-        // EVENTS
+        // KEYBOARD EVENTS
         // ==========================================
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('modal').style.display === 'flex') {
