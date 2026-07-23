@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management - Jay Shree Ram Mudhi</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <!-- Apna Firebase Config File -->
+    <script src="my.js"></script>
+
+    <style>
+        :root {
+            --bg-maroon: #5E1914;
+            --gold: #D4AF37;
+            --white: #FDF7E3;
+            --active-bg: rgba(212, 175, 55, 0.2);
+            --danger: #ff4d4d;
+            --success: #28a745;
+            --edit: #4da6ff;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
+        
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; flex: 1;}
+        
+        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
+
+        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; padding: 8px 15px; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .header-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+
+        /* Main Wrapper - 2 Columns */
+        .main-wrapper { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
+        @media (max-width: 800px) { .main-wrapper { grid-template-columns: 1fr; overflow-y: auto;} }
+
+        .col { background: rgba(0,0,0,0.2); border: 2px solid var(--gold); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+        .col-title { padding: 12px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; font-size: 1.2rem; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Lists */
+        .search-bar { width: 92%; margin: 12px auto 5px; padding: 10px; border-radius: 6px; border: 2px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; text-transform: capitalize; font-size: 1rem; }
+        .list { flex: 1; overflow-y: auto; padding: 12px; }
+        
+        .item { padding: 12px; margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; transition: 0.2s;}
+        .item:hover { background: rgba(255,255,255,0.05); }
+        .item.active { background: var(--active-bg); border-color: var(--gold); color: var(--gold); font-weight: bold; }
+        
+        .item-actions { display: flex; gap: 8px; }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 2px; transition: transform 0.2s;}
+        .btn-icon:hover { transform: scale(1.2); }
+        .btn-icon.edit { color: var(--edit); }
+        .btn-icon.del { color: var(--danger); }
+        
+        /* Staff Details Header */
+        .staff-header { display: flex; flex-direction: column; justify-content: center; color: var(--gold); margin-bottom: 15px; padding: 15px; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px; }
+        .due-corner { position: absolute; right: 15px; top: 15px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 6px; border: 1px solid;}
+        .tag { font-size: 0.85rem; background: #333; color: #fff; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: normal; border: 1px solid var(--gold);}
+
+        /* History Rows */
+        .history-row { background: rgba(0,0,0,0.3); padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--gold); position: relative; transition: 0.2s;}
+        .history-row:hover { background: rgba(212,175,55,0.15); }
+        .h-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 5px;}
+        .h-body { display: flex; justify-content: space-between; align-items: center; }
+        .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; font-weight: bold; }
+        .status-present { background: rgba(40,167,69,0.2); color: var(--success); border: 1px solid var(--success); }
+        .status-absent { background: rgba(255,77,77,0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .status-half { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid #ff9800; }
+        
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 400px; position: relative; max-height: 90vh; overflow-y: auto;}
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+        
+        .modal-content h3 { font-size: 1.5rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; border-bottom: 1px dashed var(--gold); padding-bottom: 10px;}
+        
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.1rem; border-radius: 6px; outline: none; transition: 0.2s;}
+        input:focus, select:focus, textarea:focus { border-color: #fff; }
+        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.2rem; border-radius: 6px; transition: 0.2s;}
+        .btn-save:hover { filter: brightness(1.1); }
+        
+        #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
+
+        /* Toast */
+        #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
+        .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">⬅ Back to Home</a>
+        <h1 class="header-title">Staff Management</h1>
+        <button class="header-btn" onclick="openModal('addStaff')">+ Add Staff</button>
+    </header>
+
+    <div id="dbStatus">Loading Data... ⏳</div>
+    <div id="toastBox"></div>
+
+    <div class="main-wrapper">
+        <!-- Left Column: Staff List -->
+        <div class="col">
+            <div class="col-title">Our Staff</div>
+            <input type="text" id="searchStaff" class="search-bar" placeholder="🔍 Search Staff..." onkeyup="render()">
+            <div class="list" id="staffList"></div>
+        </div>
+        
+        <!-- Right Column: Ledger -->
+        <div class="col">
+            <div class="col-title" style="justify-content: center;">Khata & Attendance</div>
+            <div class="list" id="detailsBox">
+                <!-- Data will render here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function generateId() {
+            return 'stf_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function showToast(msg, type = 'info') {
+            let toastBox = document.getElementById('toastBox');
+            let toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            let icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+            toastBox.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function autoCapitalize(text) {
+            if (!text) return text;
+            return text.replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        function formatMoney(amt) {
+            return parseFloat(amt || 0).toFixed(2).replace(/\.00$/, '');
+        }
+
+        // ==========================================
+        // DATA NORMALIZATION & SYNC
+        // ==========================================
+        // Yahan par baaki app ka data (places, customers, expenses) bhi handle kiya hai taaki delete na ho.
+        function normalizeData(data) {
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [] };
+            
+            let safeStaff = (data.staff || []).filter(s => s != null);
+            safeStaff.forEach(s => {
+                if (!s.id) s.id = generateId(); 
+                s.history = (s.history || []).filter(h => h != null);
+                s.history.forEach(h => { if (!h.id) h.id = generateId(); });
+            });
+
+            return {
+                places: (data.places || []).filter(p => p != null),
+                customers: (data.customers || []).filter(c => c != null),
+                defaultPrices: (data.defaultPrices || []).filter(p => p != null),
+                expenses: (data.expenses || []).filter(e => e != null),
+                staff: safeStaff
+            };
+        }
+
+        let state = { places: [], customers: [], defaultPrices: [], expenses: [], staff: [] };
+        let activeStaffId = null; 
+        
+        let localData = localStorage.getItem('jsrm_state');
+        if (localData) {
+            state = normalizeData(JSON.parse(localData));
+            render();
+        }
+
+        // dbRef comes from my.js
+        dbRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
+                    saveToCloud(); 
+                } else {
+                    state = normalizeData(snapshot.val());
+                    localStorage.setItem('jsrm_state', JSON.stringify(state));
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    updateNetworkStatus(true);
+                    render(); 
+                }
+            }
+        });
+
+        function saveToCloud() { 
+            localStorage.setItem('jsrm_state', JSON.stringify(state));
+            localStorage.setItem('jsrm_sync_pending', 'true');
+            render(); 
+
+            if (navigator.onLine) {
+                dbRef.set(state).then(() => {
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    updateNetworkStatus(true);
+                }).catch(() => { updateNetworkStatus(false); });
+            } else {
+                updateNetworkStatus(false);
+            }
+        }
+
+        window.addEventListener('online', () => {
+            if (localStorage.getItem('jsrm_sync_pending') === 'true') { saveToCloud(); } 
+            else { updateNetworkStatus(true); }
+        });
+        window.addEventListener('offline', () => { updateNetworkStatus(false); });
+
+        function updateNetworkStatus(isOnline) {
+            let statusEl = document.getElementById('dbStatus');
+            if(isOnline) {
+                statusEl.innerHTML = "Cloud Synced 🟢"; statusEl.style.color = "#4CAF50";
+            } else {
+                statusEl.innerHTML = "Offline Mode 📴"; statusEl.style.color = "#ff9800";
+            }
+        }
+
+        // ==========================================
+        // MODALS & CRUD
+        // ==========================================
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        
+        function openModal(type, targetId = null, transId = null) {
+            document.getElementById('modal').style.display = 'flex';
+            let content = `<span class="close-btn" onclick="closeModal()">&times;</span>`;
+            
+            if(type === 'addStaff') {
+                content += `<h3>New Staff Member</h3>
+                    <input id="sName" placeholder="Full Name">
+                    <input id="sPhone" type="text" placeholder="Mobile Number" maxlength="10">
+                    <select id="sRole">
+                        <option value="" disabled selected>-- Select Role --</option>
+                        <option value="Labour">Labour</option>
+                        <option value="Driver">Driver</option>
+                        <option value="Helper">Helper</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input id="sWage" type="number" placeholder="Daily Wage / Dehadi (₹)">
+                    <button class="btn-save" onclick="saveStaff()">Save Staff</button>`;
+            } 
+            else if(type === 'editStaff') {
+                let s = state.staff.find(x => x.id === targetId);
+                content += `<h3>Edit Staff Details</h3>
+                    <input id="sName" value="${s.name}" placeholder="Full Name">
+                    <input id="sPhone" type="text" value="${s.phone || ''}" placeholder="Mobile Number" maxlength="10">
+                    <select id="sRole">
+                        <option value="Labour" ${s.role==='Labour'?'selected':''}>Labour</option>
+                        <option value="Driver" ${s.role==='Driver'?'selected':''}>Driver</option>
+                        <option value="Helper" ${s.role==='Helper'?'selected':''}>Helper</option>
+                        <option value="Manager" ${s.role==='Manager'?'selected':''}>Manager</option>
+                        <option value="Other" ${s.role==='Other'?'selected':''}>Other</option>
+                    </select>
+                    <input id="sWage" type="number" value="${s.dailyWage}" placeholder="Daily Wage / Dehadi (₹)">
+                    <button class="btn-save" onclick="updateStaff('${targetId}')">Update Details</button>`;
+            }
+            else if(type === 'addEntry') {
+                let s = state.staff.find(x => x.id === targetId);
+                let today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                content += `<h3>Attendance & Entry</h3>
+                    <label style="color:#aaa; font-size:0.9rem;">Date:</label>
+                    <input type="date" id="eDate" value="${today}">
+                    
+                    <label style="color:#aaa; font-size:0.9rem; margin-top:5px; display:block;">Haziri (Status):</label>
+                    <select id="eStatus" onchange="autoFillWage('${targetId}')">
+                        <option value="Present" selected>Present (Pura Din)</option>
+                        <option value="Half-Day">Half-Day (Aadha Din)</option>
+                        <option value="Absent">Absent (Chhutti)</option>
+                    </select>
+                    
+                    <label style="color:#aaa; font-size:0.9rem; margin-top:5px; display:block;">Paisa Bana (Earned):</label>
+                    <input type="number" id="eWage" value="${s.dailyWage}" placeholder="Milo/Dehadi (₹)">
+                    
+                    <label style="color:#aaa; font-size:0.9rem; margin-top:5px; display:block;">Advance ya Diya (Paid):</label>
+                    <input type="number" id="ePaid" placeholder="Amount Paid (₹) - Leave blank if 0">
+                    
+                    <input type="text" id="eNote" placeholder="Remarks / Note (Optional)">
+                    
+                    <button class="btn-save" onclick="saveEntry('${targetId}')">Save Entry</button>`;
+            }
+
+            document.getElementById('modalContent').innerHTML = content;
+        }
+
+        // Auto fill wage based on attendance selection
+        function autoFillWage(staffId) {
+            let s = state.staff.find(x => x.id === staffId);
+            let status = document.getElementById('eStatus').value;
+            let wageInput = document.getElementById('eWage');
+            
+            if(status === 'Present') wageInput.value = s.dailyWage;
+            else if(status === 'Half-Day') wageInput.value = (s.dailyWage / 2);
+            else if(status === 'Absent') wageInput.value = 0;
+        }
+
+        function saveStaff() {
+            let name = autoCapitalize(document.getElementById('sName').value.trim());
+            let phone = document.getElementById('sPhone').value.trim();
+            let role = document.getElementById('sRole').value;
+            let wage = parseFloat(document.getElementById('sWage').value) || 0;
+
+            if(!name || !role) { showToast("Naam aur Role zaroori hai!", "error"); return; }
+
+            state.staff.push({
+                id: generateId(), name, phone, role, dailyWage: wage, history: []
+            });
+            showToast("Naya Staff Add Ho Gaya!", "success");
+            saveToCloud(); closeModal();
+        }
+
+        function updateStaff(id) {
+            let s = state.staff.find(x => x.id === id);
+            s.name = autoCapitalize(document.getElementById('sName').value.trim());
+            s.phone = document.getElementById('sPhone').value.trim();
+            s.role = document.getElementById('sRole').value;
+            s.dailyWage = parseFloat(document.getElementById('sWage').value) || 0;
+            
+            showToast("Staff Details Update Ho Gayi!", "success");
+            saveToCloud(); closeModal();
+        }
+
+        function deleteStaff(id) {
+            if(confirm("Kya aap sach mein is staff ko delete karna chahte hain? Inka saara hisaab bhi delete ho jayega!")) {
+                state.staff = state.staff.filter(x => x.id !== id);
+                if(activeStaffId === id) activeStaffId = null;
+                showToast("Staff delete ho gaya!", "success");
+                saveToCloud();
+            }
+        }
+
+        function saveEntry(staffId) {
+            let s = state.staff.find(x => x.id === staffId);
+            
+            let dateVal = document.getElementById('eDate').value; // YYYY-MM-DD
+            if(!dateVal) { showToast("Sahi date chunein!", "error"); return; }
+            // Format to DD/MM/YYYY
+            let [y, m, d] = dateVal.split('-');
+            let formattedDate = `${d}/${m}/${y}`;
+            
+            let status = document.getElementById('eStatus').value;
+            let wage = parseFloat(document.getElementById('eWage').value) || 0;
+            let paid = parseFloat(document.getElementById('ePaid').value) || 0;
+            let note = autoCapitalize(document.getElementById('eNote').value.trim());
+
+            if(!s.history) s.history = [];
+            
+            s.history.push({
+                id: generateId(),
+                date: formattedDate,
+                rawDate: dateVal, // For sorting later if needed
+                status: status,
+                earned: wage,
+                paid: paid,
+                note: note
+            });
+
+            showToast("Entry Save Ho Gayi ✅", "success");
+            saveToCloud(); closeModal();
+        }
+
+        function deleteEntry(staffId, entryId) {
+            if(confirm("Kya aap sach mein ye entry delete karna chahte hain?")) {
+                let s = state.staff.find(x => x.id === staffId);
+                s.history = s.history.filter(x => x.id !== entryId);
+                showToast("Entry Delete Ho Gayi 🗑️", "success");
+                saveToCloud();
+            }
+        }
+
+        // ==========================================
+        // RENDER UI
+        // ==========================================
+        function getStaffBalance(staff) {
+            let totalEarned = 0;
+            let totalPaid = 0;
+            if(staff.history) {
+                staff.history.forEach(h => {
+                    totalEarned += parseFloat(h.earned) || 0;
+                    totalPaid += parseFloat(h.paid) || 0;
+                });
+            }
+            return { earned: totalEarned, paid: totalPaid, net: totalEarned - totalPaid };
+        }
+
+        function render() {
+            let searchStr = document.getElementById('searchStaff').value.toLowerCase();
+            let filteredStaff = (state.staff || []).filter(s => s.name.toLowerCase().includes(searchStr));
+
+            document.getElementById('staffList').innerHTML = filteredStaff.reverse().map(s => {
+                let bal = getStaffBalance(s).net;
+                let balText = "";
+                if(bal > 0) balText = `<span style="color:var(--danger); font-size:0.9rem;">Due: ₹${formatMoney(bal)}</span>`;
+                else if(bal < 0) balText = `<span style="color:var(--success); font-size:0.9rem;">Adv: ₹${formatMoney(Math.abs(bal))}</span>`;
+                else balText = `<span style="color:#aaa; font-size:0.9rem;">Clear</span>`;
+
+                return `
+                <div class="item ${activeStaffId === s.id ? 'active' : ''}" onclick="selectStaff('${s.id}')">
+                    <div>
+                        👤 ${s.name} <span class="tag">${s.role}</span>
+                        <div style="margin-top:5px;">${balText}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editStaff', '${s.id}')" title="Edit">✏️</button>
+                        <button class="btn-icon del" onclick="event.stopPropagation(); deleteStaff('${s.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            let activeS = state.staff.find(s => s.id === activeStaffId);
+            let detailsBox = document.getElementById('detailsBox');
+            
+            if(activeS) {
+                let bal = getStaffBalance(activeS);
+                let dueStatusHTML = '';
+                if(bal.net > 0) {
+                    dueStatusHTML = `<div class="due-corner" style="color:var(--danger); border-color:var(--danger);">Dena Baki: ₹${formatMoney(bal.net)}</div>`;
+                } else if(bal.net < 0) {
+                    dueStatusHTML = `<div class="due-corner" style="color:var(--success); border-color:var(--success);">Advance: ₹${formatMoney(Math.abs(bal.net))}</div>`;
+                } else {
+                    dueStatusHTML = `<div class="due-corner" style="color:#aaa; border-color:#555;">Hisaab Clear: ₹0</div>`;
+                }
+
+                // Render History Reverse (Newest Top)
+                let historyHTML = '';
+                let histArray = [...(activeS.history || [])].reverse();
+                
+                if(histArray.length === 0) {
+                    historyHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.1rem;">Abhi tak koi entry nahi hai.</div>';
+                } else {
+                    historyHTML = histArray.map(h => {
+                        let statusClass = h.status === 'Present' ? 'status-present' : (h.status === 'Absent' ? 'status-absent' : 'status-half');
+                        return `
+                        <div class="history-row">
+                            <div class="h-header">
+                                <span style="font-size:1.1rem; color:var(--gold);">📅 ${h.date}</span>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span class="status-tag ${statusClass}">${h.status}</span>
+                                    <button class="btn-icon del" style="font-size:14px;" onclick="deleteEntry('${activeS.id}', '${h.id}')" title="Delete Entry">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="h-body">
+                                <div>
+                                    <div style="font-size:0.95rem; color:#ccc;">Paisa Bana: <b style="color:var(--white);">₹${formatMoney(h.earned)}</b></div>
+                                    <div style="font-size:0.95rem; color:#ccc;">Jama/Advance: <b style="color:var(--success);">₹${formatMoney(h.paid)}</b></div>
+                                    ${h.note ? `<div style="font-size:0.85rem; color:#aaa; margin-top:5px; font-style:italic;">📝 ${h.note}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+
+                detailsBox.innerHTML = `
+                    <div class="staff-header">
+                        <div style="font-size: 1.8rem; font-weight:bold; margin-bottom: 5px; max-width:70%;">👤 ${activeS.name}</div>
+                        <div style="font-size: 1rem; color: #ccc; margin-bottom: 25px;">
+                            📞 ${activeS.phone || 'N/A'} &nbsp;|&nbsp; 🏷️ ${activeS.role} &nbsp;|&nbsp; 💰 Dehadi: ₹${activeS.dailyWage}
+                        </div>
+                        ${dueStatusHTML}
+                        <button class="header-btn" style="position:absolute; right:15px; bottom:-20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);" onclick="openModal('addEntry', '${activeS.id}')">➕ New Entry</button>
+                    </div>
+                    <div style="padding: 10px 0; margin-top:20px;">
+                        ${historyHTML}
+                    </div>`;
+            } else {
+                detailsBox.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.3rem;">Kisi Staff ko select karein</div>';
+            }
+        }
+
+        function selectStaff(id) { 
+            activeStaffId = id; 
+            render(); 
+        }
+
+        // ==========================================
+        // KEYBOARD EVENTS
+        // ==========================================
+        window.addEventListener('keydown', function(e) {
+            if (document.getElementById('modal').style.display === 'flex') {
+                if (e.key === 'Enter') {
+                    let saveBtns = document.querySelector('.modal-content').querySelectorAll('.btn-save');
+                    if(saveBtns.length > 0) saveBtns[saveBtns.length-1].click();
+                }
+                else if (e.key === 'Escape') { closeModal(); }
+            }
+        });
+    </script>
+</body>
+</html>
