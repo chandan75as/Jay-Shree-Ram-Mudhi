@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
+    <!-- Apna Firebase Config File -->
+    <script src="my.js"></script>
+
     <style>
         :root {
             --bg-maroon: #5E1914;
@@ -20,95 +23,96 @@
             --edit: #4da6ff;
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 18px; }
+        /* Font size 18px se 15px kiya gaya */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
         
         /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
-        .header-title { color: var(--gold); font-size: 2.5rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; }
-        .header-left, .header-right { display: flex; gap: 15px; align-items: center; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; }
+        .header-left, .header-right { display: flex; gap: 12px; align-items: center; }
         
-        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 28px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; transition: 0.2s;}
+        .header-btn { background: var(--gold); color: var(--bg-maroon); border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; transition: 0.2s;}
         .header-btn:hover { transform: scale(1.05); }
-        .edit-toggle-btn { background: transparent; border: 2px solid var(--gold); color: var(--gold); font-size: 24px; }
+        .edit-toggle-btn { background: transparent; border: 2px solid var(--gold); color: var(--gold); font-size: 20px; }
         .edit-toggle-btn.active { background: var(--danger); border-color: var(--danger); color: white; }
 
         /* Dropdowns */
         .dropdown-container { position: relative; }
-        .dropdown { display: none; position: absolute; top: 65px; background: #333; border: 1px solid var(--gold); min-width: 220px; border-radius: 8px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden;}
+        .dropdown { display: none; position: absolute; top: 55px; background: #333; border: 1px solid var(--gold); min-width: 200px; border-radius: 8px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden;}
         .dropdown.left-drop { left: 0; }
         .dropdown.right-drop { right: 0; }
-        .dropdown a { display: block; padding: 15px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; font-size: 1.1rem; }
+        .dropdown a { display: block; padding: 12px 15px; color: var(--white); text-decoration: none; border-bottom: 1px solid #444; cursor: pointer; font-size: 1rem; }
         .dropdown a:hover { background: var(--gold); color: var(--bg-maroon); font-weight: bold;}
 
         /* Grid */
-        .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 25px; gap: 25px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 25px; width: 100%; }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 20px; width: 100%; }
         .col { background: rgba(0,0,0,0.2); border: 2px solid var(--gold); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
-        .col-title { padding: 15px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; font-size: 1.4rem; border-bottom: 2px solid var(--gold); }
+        .col-title { padding: 12px; background: rgba(212,175,55,0.1); text-align: center; color: var(--gold); font-weight: bold; font-size: 1.2rem; border-bottom: 2px solid var(--gold); }
         
         /* Lists */
-        .search-bar { width: 92%; margin: 15px auto 5px; padding: 12px; border-radius: 6px; border: 2px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; text-transform: capitalize; font-size: 1.2rem; }
-        .list { flex: 1; overflow-y: auto; padding: 15px; }
-        .item { padding: 15px; margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; }
+        .search-bar { width: 92%; margin: 12px auto 5px; padding: 10px; border-radius: 6px; border: 2px solid var(--gold); background: #333; color: white; outline: none; box-sizing: border-box; text-transform: capitalize; font-size: 1rem; }
+        .list { flex: 1; overflow-y: auto; padding: 12px; }
+        .item { padding: 12px; margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         .item:hover { background: rgba(255,255,255,0.05); }
         .item.active { background: var(--active-bg); border-color: var(--gold); color: var(--gold); font-weight: bold; }
         
         /* Actions */
-        .item-actions { display: none; gap: 10px; }
+        .item-actions { display: none; gap: 8px; }
         .edit-mode .item-actions { display: flex; }
-        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.2s;}
+        .btn-small { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
         .btn-small:hover { filter: brightness(1.2); }
-        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 2px 5px; transition: transform 0.2s;}
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 2px 5px; transition: transform 0.2s;}
         .btn-icon:hover { transform: scale(1.2); }
         .btn-icon.edit { color: var(--edit); }
         .btn-icon.del { color: var(--danger); }
         
         /* Details Area Header */
-        .cust-header { display: flex; flex-direction: column; justify-content: center; color: var(--gold); margin-bottom: 20px; padding: 20px; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px; min-height: 100px; }
-        .price-corner-btn { position: absolute; right: 15px; top: 15px; font-size: 30px; background: none; border: none; cursor: pointer; transition: 0.2s; z-index: 2; }
+        .cust-header { display: flex; flex-direction: column; justify-content: center; color: var(--gold); margin-bottom: 15px; padding: 15px; border-bottom: 2px dashed var(--gold); position: relative; background: rgba(0,0,0,0.1); border-radius: 8px; min-height: 90px; }
+        .price-corner-btn { position: absolute; right: 12px; top: 12px; font-size: 26px; background: none; border: none; cursor: pointer; transition: 0.2s; z-index: 2; }
         .price-corner-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--gold)); }
         
         /* Corner Due Display */
-        .due-corner { position: absolute; right: 15px; bottom: 15px; font-size: 1.4rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 6px; z-index: 2; border: 1px solid;}
-        .place-tag { font-size: 0.9rem; color: #ccc; margin-left: 8px; font-weight: normal; }
+        .due-corner { position: absolute; right: 12px; bottom: 12px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 6px; z-index: 2; border: 1px solid;}
+        .place-tag { font-size: 0.85rem; color: #ccc; margin-left: 8px; font-weight: normal; }
 
         /* Date Rows */
         .date-row {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.3); padding: 15px 20px; margin-bottom: 10px;
+            background: rgba(0,0,0,0.3); padding: 12px 15px; margin-bottom: 8px;
             border-radius: 8px; border: 1px solid var(--gold); cursor: pointer;
-            font-size: 1.3rem; transition: 0.2s;
+            font-size: 1.1rem; transition: 0.2s;
         }
         .date-row:hover { background: rgba(212,175,55,0.15); }
-        .d-row { margin-bottom: 12px; display: flex; justify-content: space-between; font-size:1.2rem; word-break: break-word; align-items: center;}
+        .d-row { margin-bottom: 10px; display: flex; justify-content: space-between; font-size:1.1rem; word-break: break-word; align-items: center;}
         
-        .prod-list-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px; font-size: 1.1rem; line-height: 1.6; border: 1px solid #555; width: 100%; box-sizing: border-box; }
+        .prod-list-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; font-size: 1rem; line-height: 1.5; border: 1px solid #555; width: 100%; box-sizing: border-box; }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 450px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 420px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; z-index:10; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; z-index:10; }
         .close-btn:hover { color: var(--danger); transform: scale(1.1); }
         
-        .modal-content h3 { font-size: 1.8rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; }
+        .modal-content h3 { font-size: 1.6rem; text-align: center; color: var(--gold); margin-top: 0; margin-bottom: 15px; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.2rem; border-radius: 6px; font-family: inherit; outline: none; transition: border-color 0.2s;}
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1.1rem; border-radius: 6px; font-family: inherit; outline: none; transition: border-color 0.2s;}
         input:focus, select:focus, textarea:focus { border-color: #fff; }
         textarea { resize: vertical; }
-        input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.4rem; text-align: right; }
+        input[readonly] { background: rgba(0,0,0,0.3); color: var(--gold); border: none; font-weight: bold; font-size: 1.2rem; text-align: right; }
         
         #pName, #cName, #cNearby { text-transform: capitalize; }
-        .btn-save { width: 100%; padding: 15px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.4rem; border-radius: 6px; transition: 0.2s;}
+        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.2rem; border-radius: 6px; transition: 0.2s;}
         .btn-save:hover { filter: brightness(1.1); }
         
-        #dbStatus { font-size: 1.1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
+        #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
 
-        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #555; padding: 8px 0; font-size:1.1rem; }
+        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #555; padding: 8px 0; font-size:1rem; }
 
         /* CUSTOM TOAST NOTIFICATION STYLES */
         #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
-        .toast { background: #333; color: white; padding: 12px 25px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
+        .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
         .toast.info { border-left-color: #4da6ff; }
@@ -185,8 +189,13 @@
 
     <script>
         // ==========================================
-        // CUSTOM TOAST NOTIFICATION SYSTEM
+        // UTILITY & TOAST FUNCTIONS
         // ==========================================
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
         function showToast(msg, type = 'info') {
             let toastBox = document.getElementById('toastBox');
             let toast = document.createElement('div');
@@ -209,36 +218,44 @@
             return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
-        // ==========================================
-        // FIREBASE SETUP & OFFLINE SYNC LOGIC
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
-            authDomain: "jay-shree-ram-mudhi.firebaseapp.com",
-            databaseURL: "https://jay-shree-ram-mudhi-default-rtdb.firebaseio.com",
-            projectId: "jay-shree-ram-mudhi",
-            storageBucket: "jay-shree-ram-mudhi.firebasestorage.app",
-            messagingSenderId: "146218859864",
-            appId: "1:146218859864:web:56a4dac1c0c20a3281b92d",
-            measurementId: "G-Z86Z8VSQKT"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const dbRef = database.ref('appData/mainState');
+        function normalizeData(data) {
+            if(!data) return { places: [], customers: [], defaultPrices: [] };
+            
+            let safePlaces = (data.places || []).filter(p => p != null);
+            let safeCustomers = (data.customers || []).filter(c => c != null);
+            
+            safeCustomers.forEach(c => {
+                if (!c.id) c.id = generateId(); 
+                
+                c.history = (c.history || []).filter(h => h != null);
+                c.history.forEach(h => { if (!h.id) h.id = generateId(); });
+                
+                c.priceList = (c.priceList || []).filter(p => p != null);
+                c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
+            });
 
+            return {
+                places: safePlaces,
+                customers: safeCustomers,
+                defaultPrices: data.defaultPrices || []
+            };
+        }
+
+        // ==========================================
+        // MAIN APP LOGIC (Firebase Config removed from here)
+        // ==========================================
         let state = { places: [], customers: [], defaultPrices: [] };
         let activePlace = null;
-        let activeCustomerIdx = null; 
+        let activeCustomerId = null; 
         let isEditMode = false;
         
         let tempBillItems = [];
         let tempBillTotal = 0;
-        let editingPriceIdx = -1;
+        let editingPriceId = null;
 
         let localData = localStorage.getItem('jsrm_state');
         if (localData) {
-            state = JSON.parse(localData);
+            state = normalizeData(JSON.parse(localData));
             render();
         }
 
@@ -247,10 +264,7 @@
                 if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
                     saveToCloud(); 
                 } else {
-                    let cloudData = snapshot.val();
-                    state.places = cloudData.places || [];
-                    state.customers = cloudData.customers || [];
-                    state.defaultPrices = cloudData.defaultPrices || []; 
+                    state = normalizeData(snapshot.val());
                     
                     localStorage.setItem('jsrm_state', JSON.stringify(state));
                     localStorage.setItem('jsrm_sync_pending', 'false');
@@ -310,9 +324,6 @@
             }
         }
 
-        // ==========================================
-        // UI & MODALS 
-        // ==========================================
         function toggleEditMode() {
             isEditMode = !isEditMode;
             document.body.classList.toggle('edit-mode', isEditMode);
@@ -329,7 +340,7 @@
 
         function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        function openModal(type, targetIdx = null, transIdx = null) {
+        function openModal(type, targetId = null, transId = null) {
             document.getElementById('addDrop').style.display = 'none';
             document.getElementById('mainDrop').style.display = 'none';
             
@@ -340,7 +351,6 @@
             }
 
             document.getElementById('modal').style.display = 'flex';
-            
             let closeBtnHTML = `<span class="close-btn" onclick="closeModal()" title="Close">&times;</span>`;
             let content = "";
             
@@ -348,7 +358,7 @@
                 content = `${closeBtnHTML}<h3>Add Place</h3><input id="pName" placeholder="Place Name"><button class="btn-save" onclick="addPlace()">Save Data</button>`;
             } 
             else if(type === 'editPlace') {
-                content = `${closeBtnHTML}<h3>Edit Place</h3><input id="pName" value="${targetIdx}" placeholder="Place Name"><button class="btn-save" onclick="saveEditedPlace('${targetIdx}')">Update Place</button>`;
+                content = `${closeBtnHTML}<h3>Edit Place</h3><input id="pName" value="${targetId}" placeholder="Place Name"><button class="btn-save" onclick="saveEditedPlace('${targetId}')">Update Place</button>`;
             }
             else if(type === 'customer') {
                 let options = state.places.slice().reverse().map(p => `<option value="${p}" ${p === activePlace ? 'selected' : ''}>${p}</option>`).join('');
@@ -360,33 +370,33 @@
                 <button class="btn-save" onclick="addCustomer()">Save Data</button>`;
             } 
             else if(type === 'editCustomer') {
-                let c = state.customers[targetIdx];
+                let c = state.customers.find(x => x.id === targetId);
                 let options = state.places.slice().reverse().map(p => `<option value="${p}" ${p === c.place ? 'selected' : ''}>${p}</option>`).join('');
                 content = `${closeBtnHTML}<h3>Edit Customer</h3>
                 <input id="cName" value="${c.name}">
                 <input id="cPhone" type="text" value="${c.phone}" placeholder="Mobile No. (10 Digits)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 <select id="cPlace">${options}</select>
                 <input id="cNearby" type="text" value="${c.nearby || ''}" placeholder="Nearby Landmark (Optional)">
-                <button class="btn-save" onclick="saveEditedCustomer(${targetIdx})">Update Details</button>`;
+                <button class="btn-save" onclick="saveEditedCustomer('${targetId}')">Update Details</button>`;
             }
             else if(type === 'priceList') {
-                editingPriceIdx = -1;
-                let c = state.customers[targetIdx];
+                editingPriceId = null;
+                let c = state.customers.find(x => x.id === targetId);
                 let pList = c.priceList || [];
-                let listHTML = pList.map((p, i) => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.1); padding:10px 15px; margin-bottom:8px; border-radius:6px; border:1px solid var(--gold);">
-                        <span style="font-size:1.2rem; font-weight:bold;">${p.prodName}</span>
-                        <div style="display:flex; align-items:center; gap: 10px;">
-                            <span style="font-size:1.2rem; color:var(--gold);">₹${p.rate}</span>
-                            <button onclick="editPriceForm(${targetIdx}, ${i})" style="color:var(--edit); background:none; border:none; cursor:pointer; font-size:1.2rem;" title="Edit Price">✏️</button>
-                            <button onclick="deletePrice(${targetIdx}, ${i})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.2rem;" title="Delete Price">🗑️</button>
+                let listHTML = pList.map(p => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.1); padding:10px 12px; margin-bottom:8px; border-radius:6px; border:1px solid var(--gold);">
+                        <span style="font-size:1.1rem; font-weight:bold;">${p.prodName}</span>
+                        <div style="display:flex; align-items:center; gap: 8px;">
+                            <span style="font-size:1.1rem; color:var(--gold);">₹${p.rate}</span>
+                            <button onclick="editPriceForm('${targetId}', '${p.id}')" style="color:var(--edit); background:none; border:none; cursor:pointer; font-size:1.1rem;" title="Edit Price">✏️</button>
+                            <button onclick="deletePrice('${targetId}', '${p.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:1.1rem;" title="Delete Price">🗑️</button>
                         </div>
                     </div>
                 `).join('');
                 
                 content = `${closeBtnHTML}
                     <h3 style="margin-bottom:5px;">📜 ${c.name} ki Price List</h3>
-                    <p style="text-align:center; font-size:0.9rem; color:#aaa; margin-top:0;">Agar yahan khali raha toh bill mein Global Price List aayega.</p>
+                    <p style="text-align:center; font-size:0.85rem; color:#aaa; margin-top:0;">Agar yahan khali raha toh bill mein Global Price List aayega.</p>
                     <div style="max-height: 200px; overflow-y:auto; margin-bottom: 20px;">
                         ${listHTML || '<div style="text-align:center; padding:15px; color:#aaa;">Personal price add nahi hai.</div>'}
                     </div>
@@ -394,24 +404,24 @@
                         <h4 style="margin:0 0 10px 0; color:var(--gold); text-align:center;">Naya Product Rate Set Karein</h4>
                         <input id="newPName" placeholder="Product Name (e.g., Special Mudhi)">
                         <input id="newPRate" type="number" placeholder="Rate / Price (₹)">
-                        <button id="priceSaveBtn" class="btn-save" style="margin-top:5px; font-size:1.2rem; padding:10px;" onclick="addPrice(${targetIdx})">Save Rate</button>
+                        <button id="priceSaveBtn" class="btn-save" style="margin-top:5px; padding:10px;" onclick="addPrice('${targetId}')">Save Rate</button>
                     </div>`;
             }
             else if(type === 'trans') {
                 tempBillItems = []; 
                 tempBillTotal = 0;
-                let c = state.customers[targetIdx];
+                let c = state.customers.find(x => x.id === targetId);
                 
                 let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
                 
                 if(pList.length === 0) {
                     content = `${closeBtnHTML}<h3>New Bill</h3>
-                               <p style="text-align:center; color:var(--danger); font-size:1.3rem; font-weight:bold; margin-top:30px;">Main Menu se pehle 'Our Price List' set karein!</p>`;
+                               <p style="text-align:center; color:var(--danger); font-size:1.2rem; font-weight:bold; margin-top:30px;">Main Menu se pehle 'Our Price List' set karein!</p>`;
                 } else {
                     let listType = (c.priceList && c.priceList.length > 0) ? "Customer Price List" : "Global Price List";
                     let options = pList.map((p, i) => `<option value="${i}">${p.prodName} (₹${p.rate})</option>`).join('');
                     
-                    content = `${closeBtnHTML}<h3>New Bill <br><span style="font-size:0.9rem; color:#aaa; font-weight:normal;">(Using: ${listType})</span></h3>
+                    content = `${closeBtnHTML}<h3>New Bill <br><span style="font-size:0.85rem; color:#aaa; font-weight:normal;">(Using: ${listType})</span></h3>
                                <div id="billCart" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; border:1px solid #555;">
                                    <div style="text-align:center; color:#aaa; font-style:italic;">Cart abhi khali hai</div>
                                </div>
@@ -421,24 +431,23 @@
                                        ${options}
                                    </select>
                                    <input id="billQty" type="number" placeholder="Qty" style="margin:0; flex:1;">
-                                   <button id="addBtn" onclick="addBillItem(${targetIdx})" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:12px; cursor:pointer; font-weight:bold; font-size:1.1rem; transition:0.2s;">+ Add</button>
+                                   <button id="addBtn" onclick="addBillItem('${targetId}')" style="background:#17a2b8; color:white; border:none; border-radius:6px; padding:10px; cursor:pointer; font-weight:bold; font-size:1.1rem; transition:0.2s;">+ Add</button>
                                </div>
                                <hr style="border-color:var(--gold); margin-bottom:15px;">
                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                   <span style="font-size:1.2rem; color:var(--gold);">Total Bill Amount:</span>
-                                   <input id="amt" value="₹0" readonly style="width:140px; margin:0;">
+                                   <span style="font-size:1.1rem; color:var(--gold);">Total Bill Amount:</span>
+                                   <input id="amt" value="₹0" readonly style="width:120px; margin:0;">
                                </div>
                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                   <span style="font-size:1.2rem;">Jama Amount (Paid):</span>
-                                   <input id="paid" type="number" placeholder="0" style="width:140px; margin:0; font-weight:bold; font-size:1.4rem;">
+                                   <span style="font-size:1.1rem;">Jama Amount (Paid):</span>
+                                   <input id="paid" type="number" placeholder="0" style="width:120px; margin:0; font-weight:bold; font-size:1.3rem;">
                                </div>
-                               <button class="btn-save" onclick="addTrans(${targetIdx})">Save Final Bill</button>`;
+                               <button class="btn-save" onclick="addTrans('${targetId}')">Save Final Bill</button>`;
                 }
             }
             else if(type === 'dateBills') {
-                let dateStr = transIdx; 
-                let c = state.customers[targetIdx];
-                let hIdx = c.history.findIndex(h => h.date === dateStr);
+                let c = state.customers.find(x => x.id === targetId);
+                let hIdx = c.history.findIndex(h => h.id === transId);
                 let h = c.history[hIdx];
                 
                 let prevDue = 0;
@@ -454,12 +463,12 @@
                 let formattedProd = h.prod ? h.prod.replace(/\n/g, '<br>') : '';
 
                 content = `${closeBtnHTML}
-                    <h3 style="margin-bottom:15px; font-size: 2rem;">📅 ${h.date}</h3>
-                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--gold); position:relative;">
+                    <h3 style="margin-bottom:15px; font-size: 1.8rem;">📅 ${h.date}</h3>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px; border:1px solid var(--gold); position:relative;">
                         
-                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom: 15px; border-bottom:1px solid #555; padding-bottom:10px;">
-                            <button class="btn-icon edit" onclick="openModal('editTrans', ${targetIdx}, ${hIdx})" title="Edit Record">✏️ Edit Record</button>
-                            <button class="btn-icon del" onclick="deleteTrans(${targetIdx}, ${hIdx})" title="Delete Record">🗑️ Delete Record</button>
+                        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom: 15px; border-bottom:1px solid #555; padding-bottom:10px;">
+                            <button class="btn-icon edit" style="font-size: 1rem;" onclick="openModal('editTrans', '${targetId}', '${h.id}')" title="Edit Record">✏️ Edit</button>
+                            <button class="btn-icon del" style="font-size: 1rem;" onclick="deleteTrans('${targetId}', '${h.id}')" title="Delete Record">🗑️ Delete</button>
                         </div>
                         
                         <div class="d-row" style="flex-direction:column;">
@@ -471,36 +480,35 @@
                         
                         <hr style="border-color:#555; margin:15px 0;">
                         
-                        <div class="d-row"><span>🕒 Pichla Baki (Prev Due):</span> <b>${prevDueText}</b></div>
+                        <div class="d-row"><span>🕒 Pichla Baki:</span> <b>${prevDueText}</b></div>
                         <div class="d-row"><span>📝 Bill Amount:</span> <b>₹${h.amt}</b></div>
-                        <div class="d-row"><span>💰 Jama Kiya (Paid):</span> <b style="color:var(--success)">₹${h.paid}</b></div>
+                        <div class="d-row"><span>💰 Jama Kiya:</span> <b style="color:var(--success)">₹${h.paid}</b></div>
                         
                         <hr style="border-color:var(--gold); margin:15px 0;">
                         
-                        <div class="d-row" style="font-size:1.5rem; align-items:center;">
+                        <div class="d-row" style="font-size:1.3rem; align-items:center;">
                             <span>📊 Final Hisaab:</span> 
                             <b>${closeBalText}</b>
                         </div>
                     </div>`;
             }
             else if(type === 'editTrans') {
-                let t = state.customers[targetIdx].history[transIdx];
+                let c = state.customers.find(x => x.id === targetId);
+                let t = c.history.find(h => h.id === transId);
+                
                 content = `${closeBtnHTML}<h3>Edit Daily Record</h3>
-                           <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh is din ka poora hisaab edit karega)</p>
+                           <p style="color:#aaa; font-size:0.85rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh is din ka poora hisaab edit karega)</p>
                            <textarea id="prod" rows="5" placeholder="Product Details (Ek ke neeche ek likhein)">${t.prod}</textarea>
                            <input id="amt" type="number" value="${t.amt}" placeholder="Total Bill Amount (₹)">
                            <input id="paid" type="number" value="${t.paid}" placeholder="Amount Paid (₹)">
-                           <button class="btn-save" onclick="saveEditedTrans(${targetIdx}, ${transIdx})">Update Record</button>`;
+                           <button class="btn-save" onclick="saveEditedTrans('${targetId}', '${transId}')">Update Record</button>`;
             }
             
             document.getElementById('modalContent').innerHTML = content;
             setTimeout(() => { let input = document.querySelector('.modal-content input:not([readonly])'); if(input) input.focus(); }, 100);
         }
 
-        // =======================
-        // CART LOGIC
-        // =======================
-        function addBillItem(cIdx) {
+        function addBillItem(custId) {
             let sel = document.getElementById('billProd');
             let qtyInput = document.getElementById('billQty');
             
@@ -513,7 +521,7 @@
                 return;
             }
             
-            let c = state.customers[cIdx];
+            let c = state.customers.find(x => x.id === custId);
             let pList = (c.priceList && c.priceList.length > 0) ? c.priceList : (state.defaultPrices || []);
             let prod = pList[sel.value];
             
@@ -522,7 +530,9 @@
             sel.value = ""; qtyInput.value = "";
             renderBillCart(); qtyInput.focus(); 
         }
+        
         function removeBillItem(index) { tempBillItems.splice(index, 1); renderBillCart(); }
+        
         function renderBillCart() {
             let cartDiv = document.getElementById('billCart');
             tempBillTotal = 0;
@@ -541,40 +551,44 @@
             cartDiv.scrollTop = cartDiv.scrollHeight;
         }
 
-        // =======================
-        // DATA ACTIONS
-        // =======================
-        function editPriceForm(cIdx, pIdx) {
-            let p = state.customers[cIdx].priceList[pIdx];
+        function editPriceForm(custId, priceId) {
+            let c = state.customers.find(x => x.id === custId);
+            let p = c.priceList.find(x => x.id === priceId);
+            
             document.getElementById('newPName').value = p.prodName;
             document.getElementById('newPRate').value = p.rate;
-            editingPriceIdx = pIdx;
+            editingPriceId = priceId;
             document.getElementById('priceSaveBtn').innerText = "Update Rate";
         }
 
-        function addPrice(cIdx) {
+        function addPrice(custId) {
             let n = autoCapitalize(document.getElementById('newPName').value.trim());
             let r = parseFloat(document.getElementById('newPRate').value);
             
             if(!n) { showToast("Product ka naam likhein!", "error"); return; }
             if(isNaN(r) || r < 0) { showToast("Sahi rate (₹) dalein!", "error"); return; }
             
-            if(!state.customers[cIdx].priceList) state.customers[cIdx].priceList = [];
+            let c = state.customers.find(x => x.id === custId);
+            if(!c.priceList) c.priceList = [];
             
-            if(editingPriceIdx > -1) {
-                state.customers[cIdx].priceList[editingPriceIdx] = { prodName: n, rate: r };
+            if(editingPriceId) {
+                let p = c.priceList.find(x => x.id === editingPriceId);
+                p.prodName = n;
+                p.rate = r;
                 showToast("Rate update ho gaya!", "success");
             } else {
-                state.customers[cIdx].priceList.push({ prodName: n, rate: r });
+                c.priceList.push({ id: generateId(), prodName: n, rate: r });
                 showToast("Naya rate save ho gaya!", "success");
             }
-            editingPriceIdx = -1;
-            saveToCloud(); openModal('priceList', cIdx); 
+            editingPriceId = null;
+            saveToCloud(); openModal('priceList', custId); 
         }
-        function deletePrice(cIdx, pIdx) { 
-            state.customers[cIdx].priceList.splice(pIdx, 1); 
+        
+        function deletePrice(custId, priceId) { 
+            let c = state.customers.find(x => x.id === custId);
+            c.priceList = c.priceList.filter(x => x.id !== priceId);
             showToast("Rate delete ho gaya!", "success");
-            saveToCloud(); openModal('priceList', cIdx); 
+            saveToCloud(); openModal('priceList', custId); 
         }
         
         function addPlace() { 
@@ -587,6 +601,7 @@
             showToast("Nayi jagah list mein add ho gayi!", "success");
             saveToCloud(); closeModal();
         }
+        
         function saveEditedPlace(oldName) {
             let newName = autoCapitalize(document.getElementById('pName').value.trim()); 
             if(!newName) { showToast("Naam khali nahi ho sakta!", "error"); return; }
@@ -609,7 +624,7 @@
                 
                 state.customers.forEach(c => { if(c.place === p) c.place = "Uncategorized"; });
                 
-                if(activePlace === p) { activePlace = null; activeCustomerIdx = null; }
+                if(activePlace === p) { activePlace = null; activeCustomerId = null; }
                 
                 showToast("Jagah delete ho gayi!", "success");
                 saveToCloud();
@@ -626,37 +641,43 @@
             if(!place) { showToast("Customer ki jagah (Place) chunein!", "error"); return; }
             if(phone && phone.length !== 10) { showToast("Mobile number 10 digits ka hona chahiye!", "error"); return; }
             
-            state.customers.push({name, phone, place, nearby, history: [], priceList: []}); 
+            state.customers.push({
+                id: generateId(),
+                name, phone, place, nearby, history: [], priceList: []
+            }); 
+            
             showToast("Naya Customer add ho gaya!", "success");
             saveToCloud(); closeModal();
         }
-        function saveEditedCustomer(idx) {
+        
+        function saveEditedCustomer(custId) {
             let name = autoCapitalize(document.getElementById('cName').value.trim());
             let phone = document.getElementById('cPhone').value;
             
             if(!name) { showToast("Customer ka naam zaroori hai!", "error"); return; }
             if(phone && phone.length !== 10) { showToast("Mobile number 10 digits ka hona chahiye!", "error"); return; }
             
-            state.customers[idx].name = name;
-            state.customers[idx].phone = phone; 
-            state.customers[idx].place = document.getElementById('cPlace').value;
-            state.customers[idx].nearby = autoCapitalize(document.getElementById('cNearby').value.trim());
+            let c = state.customers.find(x => x.id === custId);
+            c.name = name;
+            c.phone = phone; 
+            c.place = document.getElementById('cPlace').value;
+            c.nearby = autoCapitalize(document.getElementById('cNearby').value.trim());
             
             showToast("Customer details update ho gayi!", "success");
             saveToCloud(); closeModal();
         }
-        function deleteCustomer(idx) {
-            if(confirm(`Kya aap sach mein customer '${state.customers[idx].name}' ko delete karna chahte hain?`)) {
-                state.customers.splice(idx, 1); activeCustomerIdx = null; 
+        
+        function deleteCustomer(custId) {
+            let c = state.customers.find(x => x.id === custId);
+            if(confirm(`Kya aap sach mein customer '${c.name}' ko delete karna chahte hain?`)) {
+                state.customers = state.customers.filter(x => x.id !== custId);
+                if(activeCustomerId === custId) activeCustomerId = null; 
                 showToast("Customer Delete ho gaya!", "success");
                 saveToCloud();
             }
         }
 
-        // =======================
-        // TRANSACTION (BILLING) LOGIC
-        // =======================
-        function addTrans(idx) { 
+        function addTrans(custId) { 
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
             
@@ -677,45 +698,55 @@
             }
             
             let today = new Date().toLocaleDateString('en-GB');
-            if(!state.customers[idx].history) state.customers[idx].history = [];
-            let existingIdx = state.customers[idx].history.findIndex(h => h.date === today);
+            let c = state.customers.find(x => x.id === custId);
             
-            if(existingIdx > -1) {
-                let t = state.customers[idx].history[existingIdx];
-                if (!t.prod) {
-                    t.prod = prodString; 
+            if(!c.history) c.history = [];
+            
+            let existingEntry = c.history.find(h => h.date === today);
+            
+            if(existingEntry) {
+                if (!existingEntry.prod) {
+                    existingEntry.prod = prodString; 
                 } else {
-                    t.prod = t.prod + "\n" + prodString; 
+                    existingEntry.prod = existingEntry.prod + "\n" + prodString; 
                 }
-                t.amt = (parseFloat(t.amt) || 0) + amt;
-                t.paid = (parseFloat(t.paid) || 0) + paid;
+                existingEntry.amt = (parseFloat(existingEntry.amt) || 0) + amt;
+                existingEntry.paid = (parseFloat(existingEntry.paid) || 0) + paid;
             } else {
-                state.customers[idx].history.push({prod: prodString, amt: amt, paid: paid, date: today}); 
+                c.history.push({
+                    id: generateId(),
+                    prod: prodString, 
+                    amt: amt, 
+                    paid: paid, 
+                    date: today
+                }); 
             }
             
             showToast("Hisaab Save Ho Gaya! ✅", "success");
             saveToCloud(); closeModal();
         }
         
-        function saveEditedTrans(cIdx, tIdx) {
-            state.customers[cIdx].history[tIdx].prod = document.getElementById('prod').value.trim();
-            state.customers[cIdx].history[tIdx].amt = parseFloat(document.getElementById('amt').value) || 0;
-            state.customers[cIdx].history[tIdx].paid = parseFloat(document.getElementById('paid').value) || 0;
+        function saveEditedTrans(custId, transId) {
+            let c = state.customers.find(x => x.id === custId);
+            let t = c.history.find(x => x.id === transId);
+            
+            t.prod = document.getElementById('prod').value.trim();
+            t.amt = parseFloat(document.getElementById('amt').value) || 0;
+            t.paid = parseFloat(document.getElementById('paid').value) || 0;
+            
             showToast("Record Update Ho Gaya!", "success");
             saveToCloud(); closeModal();
         }
         
-        function deleteTrans(cIdx, tIdx) {
+        function deleteTrans(custId, transId) {
             if(confirm("Dhyan rahe: Kya aap is din ka poora record delete karna chahte hain?")) { 
-                state.customers[cIdx].history.splice(tIdx, 1); 
+                let c = state.customers.find(x => x.id === custId);
+                c.history = c.history.filter(x => x.id !== transId);
                 showToast("Record delete ho gaya!", "success");
                 saveToCloud(); closeModal(); 
             }
         }
 
-        // =======================
-        // RENDER UI 
-        // =======================
         function render() {
             let searchP = document.getElementById('searchPlace').value.toLowerCase();
             let searchC = document.getElementById('searchCust').value.toLowerCase();
@@ -734,22 +765,23 @@
             let filteredCust = (searchC.trim() !== '') ? state.customers.filter(c => c.name.toLowerCase().includes(searchC) || (c.phone && c.phone.includes(searchC))) : (activePlace ? state.customers.filter(c => c.place === activePlace) : []);
             
             document.getElementById('customerList').innerHTML = filteredCust.slice().reverse().map(c => {
-                let realIdx = state.customers.indexOf(c); 
                 return `
-                <div class="item ${activeCustomerIdx === realIdx ? 'active' : ''}" onclick="selectCustomer(${realIdx})">
+                <div class="item ${activeCustomerId === c.id ? 'active' : ''}" onclick="selectCustomer('${c.id}')">
                     <div>👤 ${c.name} ${(searchC.trim() !== '') ? `<span class="place-tag">📍 ${c.place}</span>` : ''}</div>
                     <div style="display:flex; gap:8px;">
                         <div class="item-actions">
-                            <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editCustomer', ${realIdx})" title="Edit Customer">✏️</button>
-                            <button class="btn-icon del" onclick="event.stopPropagation(); deleteCustomer(${realIdx})" title="Delete Customer">🗑️</button>
+                            <button class="btn-icon edit" onclick="event.stopPropagation(); openModal('editCustomer', '${c.id}')" title="Edit Customer">✏️</button>
+                            <button class="btn-icon del" onclick="event.stopPropagation(); deleteCustomer('${c.id}')" title="Delete Customer">🗑️</button>
                         </div>
-                        <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', ${realIdx})">New Bill</button>
+                        <button class="btn-small" onclick="event.stopPropagation(); openModal('trans', '${c.id}')">New Bill</button>
                     </div>
                 </div>`;
             }).join('');
 
-            if(activeCustomerIdx !== null && state.customers[activeCustomerIdx]) {
-                let c = state.customers[activeCustomerIdx];
+            let activeCustomer = state.customers.find(c => c.id === activeCustomerId);
+            
+            if(activeCustomer) {
+                let c = activeCustomer;
                 let historyArr = c.history || [];
                 
                 let grandTotalBill = 0, grandTotalPaid = 0;
@@ -769,45 +801,47 @@
 
                 let todayStr = new Date().toLocaleDateString('en-GB');
                 
-                let mappedHistory = historyArr.map((h, i) => ({...h, originalIndex: i}));
+                let mappedHistory = historyArr.map((h) => ({...h}));
                 let reversedHistory = mappedHistory.reverse();
                 
                 let datesListHTML = reversedHistory.map(h => {
                     let label = (h.date === todayStr) ? `Today (${h.date})` : h.date;
                     return `
-                    <div class="date-row" onclick="openModal('dateBills', ${activeCustomerIdx}, '${h.date}')" title="Hisaab Dekhein">
+                    <div class="date-row" onclick="openModal('dateBills', '${c.id}', '${h.id}')" title="Hisaab Dekhein">
                         <span>📅 ${label}</span>
                         <span style="color:var(--gold); font-weight:bold;">₹${h.amt}</span>
                     </div>`;
                 }).join('');
                 
                 if(historyArr.length === 0) {
-                    datesListHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.4rem;">Abhi tak koi transaction nahi hai.</div>';
+                    datesListHTML = '<div style="text-align:center; padding:30px; opacity:0.5; font-size:1.2rem;">Abhi tak koi transaction nahi hai.</div>';
                 }
 
                 let nearbyText = c.nearby ? ` (Near: ${c.nearby})` : '';
 
                 document.getElementById('detailsBox').innerHTML = `
                     <div class="cust-header">
-                        <button class="price-corner-btn" onclick="openModal('priceList', ${activeCustomerIdx})" title="Price List Setup">📜</button>
-                        <div style="font-size: 2.2rem; font-weight:bold; margin-bottom: 5px; max-width:85%;">👤 ${c.name}</div>
-                        <div style="font-size: 1.1rem; color: #ccc; margin-bottom: 30px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}${nearbyText}</div>
+                        <button class="price-corner-btn" onclick="openModal('priceList', '${c.id}')" title="Price List Setup">📜</button>
+                        <div style="font-size: 2rem; font-weight:bold; margin-bottom: 5px; max-width:85%;">👤 ${c.name}</div>
+                        <div style="font-size: 1rem; color: #ccc; margin-bottom: 25px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}${nearbyText}</div>
                         ${dueStatusHTML}
                     </div>
                     <div style="padding: 10px 0;">
                         ${datesListHTML}
                     </div>`;
             } else {
-                document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.5rem;">Kisi customer ko select karein</div>';
+                document.getElementById('detailsBox').innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5; font-size:1.3rem;">Kisi customer ko select karein</div>';
             }
         }
 
-        function selectPlace(p) { activePlace = p; activeCustomerIdx = null; render(); }
-        function selectCustomer(idx) { activeCustomerIdx = idx; activePlace = state.customers[idx].place; render(); }
+        function selectPlace(p) { activePlace = p; activeCustomerId = null; render(); }
+        function selectCustomer(id) { 
+            activeCustomerId = id; 
+            let c = state.customers.find(x => x.id === id);
+            if(c) activePlace = c.place; 
+            render(); 
+        }
 
-        // ==========================================
-        // KEYBOARD EVENTS
-        // ==========================================
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('modal').style.display === 'flex') {
                 let act = document.activeElement;
