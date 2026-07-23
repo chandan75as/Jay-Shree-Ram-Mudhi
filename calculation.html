@@ -5,104 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Total Calculation - Jay Shree Ram Mudhi</title>
     
+    <!-- CSS File Link (calculation.css alag file me hona chahiye) -->
+    <link rel="stylesheet" href="calculation.css">
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <!-- Apna Firebase Config File -->
     <script src="my.js"></script>
-
-    <style>
-        :root {
-            --bg-maroon: #5E1914;
-            --gold: #D4AF37;
-            --white: #FDF7E3;
-            --danger: #ff4d4d;
-            --success: #28a745;
-            --card-bg: rgba(0,0,0,0.3);
-        }
-
-        /* Font size 16px se 15px kiya gaya consistency ke liye */
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
-        
-        /* Header & Filters */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;}
-        .header-title { color: var(--gold); font-size: 1.8rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; flex: 1;}
-        
-        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 6px 12px; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
-        .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
-
-        .filter-section { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;}
-        .filter-section select, .filter-section input[type="date"] { 
-            width: auto; margin: 0; padding: 6px 10px; font-size: 0.95rem; cursor: pointer; 
-            background: var(--gold); color: var(--bg-maroon); font-weight: bold; border: none; 
-            outline: none; border-radius: 5px;
-        }
-        .date-range-container { display: none; align-items: center; gap: 5px; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 5px; border: 1px solid var(--gold);}
-
-        /* Dashboard Area */
-        .main-container { padding: 20px; flex: 1; overflow-y: auto; }
-        
-        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
-        
-        .stat-card { background: var(--card-bg); border: 2px solid var(--gold); border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s;}
-        .stat-card:hover { transform: translateY(-3px); }
-        .stat-title { font-size: 1rem; color: #ccc; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 1.8rem; font-weight: bold; color: var(--gold); }
-        .stat-subtext { font-size: 0.85rem; margin-top: 5px; color: #bbb; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 5px;}
-        
-        .card-profit .stat-value { color: var(--success); }
-        .card-loss .stat-value { color: var(--danger); }
-        .card-due .stat-value { color: var(--danger); }
-        .card-cash .stat-value { color: #4da6ff; }
-
-        /* Lower Section */
-        .bottom-grid { display: grid; grid-template-columns: 1fr 1.3fr 1.3fr; gap: 15px; }
-        @media (max-width: 1000px) {
-            .bottom-grid { grid-template-columns: 1fr; }
-            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-            .card-cash { grid-column: span 2 !important; }
-        }
-        
-        .panel { background: var(--card-bg); border: 2px solid var(--gold); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; max-height: 500px;}
-        .panel-title { font-size: 1.2rem; color: var(--gold); border-bottom: 2px dashed var(--gold); padding-bottom: 8px; margin-bottom: 12px; text-align: center; font-weight: bold; }
-
-        input:not([type="date"]), select, textarea { width: 100%; padding: 10px; margin: 6px 0; border: 2px solid var(--gold); background: #333; color: white; box-sizing: border-box; font-size: 1rem; border-radius: 6px; outline: none;}
-        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 10px; font-size: 1.1rem; border-radius: 6px; transition: 0.2s;}
-        .btn-save:hover { filter: brightness(1.1); transform: scale(1.02); }
-
-        /* Expense/Income List with Compact Text */
-        .expense-list { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .exp-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid transparent; transition: 0.2s; gap: 10px;}
-        .exp-item:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
-        
-        .exp-details { display: flex; flex-direction: column; flex: 1; word-break: break-word;}
-        .exp-type { font-size: 1.05rem; font-weight: bold; color: var(--white); margin-bottom: 2px;}
-        .exp-date { font-size: 0.85rem; color: #aaa; }
-        .exp-desc { font-size: 0.9rem; color: #ccc; margin-top: 3px;}
-        
-        .exp-amount { font-size: 1.2rem; font-weight: bold; color: var(--danger); display: flex; align-items: center; gap: 8px; white-space: nowrap;}
-        .inc-amount { color: var(--success); font-size: 1.2rem; font-weight: bold; white-space: nowrap;} 
-        .inv-amount { color: #4da6ff; font-size: 1.2rem; font-weight: bold; white-space: nowrap;} 
-        
-        .btn-del { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; transition: transform 0.2s; padding: 0;}
-        .btn-del:hover { transform: scale(1.2); }
-
-        #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold; }
-        
-        /* CUSTOM TOAST NOTIFICATION */
-        #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
-        .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
-        .toast.success { border-left-color: var(--success); }
-        .toast.error { border-left-color: var(--danger); }
-        
-        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
-        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
-    </style>
 </head>
 <body>
 
@@ -160,7 +71,7 @@
             </div>
             
             <div class="stat-card" id="profitCard">
-                <div class="stat-title" id="profitLabel">Net Profit</div>
+                <div class="stat-title" id="profitLabel">Net Profit (Fayda)</div>
                 <div class="stat-value" id="netProfit">₹0</div>
             </div>
             
@@ -209,6 +120,7 @@
 
     </div>
 
+    <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
         // ==========================================
         // UTILITY FUNCTIONS
@@ -238,11 +150,14 @@
         }
 
         function parseDateString(dateStr) {
-            let [d, m, y] = dateStr.split('/');
-            return new Date(y, m - 1, d);
+            if(!dateStr) return new Date(); // Safety check for empty date
+            let parts = dateStr.split('/');
+            if(parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date();
         }
 
-        // Fix null arrays and add missing IDs to old data
         function normalizeData(data) {
             if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [] };
             
@@ -258,7 +173,6 @@
                 c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
             });
 
-            // Convert old number IDs to strings just in case
             safeExpenses.forEach(e => {
                 if(!e.id || typeof e.id === 'number') e.id = generateId();
             });
@@ -282,7 +196,6 @@
             setTimeout(calculateAndRender, 100); 
         }
         
-        // dbRef my.js file se aa raha hai
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
@@ -297,13 +210,14 @@
             } 
         });
 
+        // 🔥 FIX: Firebase me sirf expenses update honge, pura data overwrite nahi hoga
         function saveToCloud() { 
             localStorage.setItem('jsrm_state', JSON.stringify(state));
             localStorage.setItem('jsrm_sync_pending', 'true');
             calculateAndRender(); 
 
             if (navigator.onLine) {
-                dbRef.set(state).then(() => {
+                dbRef.child('expenses').set(state.expenses).then(() => {
                     localStorage.setItem('jsrm_sync_pending', 'false');
                     updateNetworkStatus(true);
                 }).catch(() => { updateNetworkStatus(false); });
@@ -370,9 +284,13 @@
             let prevMonthYear = currentYear;
             if(prevMonthNum === 0) { prevMonthNum = 12; prevMonthYear = currentYear - 1; }
             let prevMonthStr = String(prevMonthNum).padStart(2, '0');
-            
             let prevYearStr = String(currentYear - 1);
+            
             let [d, m, y] = dateStr.split('/');
+            
+            // 🔥 FIX: Date aur Month par hamesha '0' laga rahega jisse filter sahi kaam kare
+            d = String(d).padStart(2, '0');
+            m = String(m).padStart(2, '0');
 
             if (filterType === 'today') {
                 return (d === currentDay && m === currentMonth && y === String(currentYear));
@@ -394,7 +312,7 @@
                 let endVal = document.getElementById('endDateInput').value;
                 if(!startVal || !endVal) return false; 
 
-                let entryDate = parseDateString(dateStr);
+                let entryDate = parseDateString(`${d}/${m}/${y}`);
                 let startDate = new Date(startVal);
                 let endDate = new Date(endVal);
                 
@@ -413,15 +331,19 @@
             let filterType = document.getElementById('timeFilter').value;
             
             let totalSales = 0;
-            let totalCollected = 0;
+            
+            // 🔥 FIX: Galle ke liye All-Time variables
+            let totalCollectedAllTime = 0;
+            let totalOutflowAllTime = 0;
+            
             let totalMarketDue = 0; 
+            let totalAdvance = 0;
 
             let incomeRecords = []; 
 
-            // 1. Calculate Sales & Build Income History
+            // 1. Calculate Sales, Dues & Build Income History
             state.customers.forEach(c => {
                 let custTotalBill_Filtered = 0;
-                let custTotalPaid_Filtered = 0;
                 let custTotalBill_AllTime = 0;
                 let custTotalPaid_AllTime = 0;
                 
@@ -430,12 +352,14 @@
                         let amt = parseFloat(h.amt) || 0;
                         let paid = parseFloat(h.paid) || 0;
                         
+                        // All-time variables hamesha add honge
                         custTotalBill_AllTime += amt;
                         custTotalPaid_AllTime += paid;
+                        totalCollectedAllTime += paid;
 
+                        // Filter wale variables me sirf selected date wala data jayega
                         if(isDateInFilter(h.date, filterType)) {
                             custTotalBill_Filtered += amt;
-                            custTotalPaid_Filtered += paid;
 
                             if(paid > 0) {
                                 let timeStr = ""; 
@@ -457,16 +381,18 @@
                 }
                 
                 totalSales += custTotalBill_Filtered;
-                totalCollected += custTotalPaid_Filtered;
 
+                // 🔥 FIX: Advance Payment aur Due calculation
                 let netCustDue = custTotalBill_AllTime - custTotalPaid_AllTime;
                 if(netCustDue > 0) {
                     totalMarketDue += netCustDue; 
+                } else if (netCustDue < 0) {
+                    totalAdvance += Math.abs(netCustDue); 
                 }
             });
 
-            // 2. Render Collection History (Paisa Aaya)
-            incomeRecords.reverse(); // Latest on top
+            // 2. Render Collection History
+            incomeRecords.reverse(); 
             let incHTML = '';
             incomeRecords.forEach(inc => {
                 let placeText = (inc.place && inc.place !== "Uncategorized") ? `📍 ${inc.place} &nbsp;|&nbsp; ` : "";
@@ -478,9 +404,7 @@
                             <span class="exp-date">${placeText}🕒 ${inc.timeStr}</span>
                             <span class="exp-desc" style="color:var(--success);">Cash Received / Jama</span>
                         </div>
-                        <div class="inc-amount">
-                            +₹${formatMoney(inc.amount)}
-                        </div>
+                        <div class="inc-amount">+₹${formatMoney(inc.amount)}</div>
                     </div>
                 `;
             });
@@ -489,7 +413,7 @@
             }
             document.getElementById('incomeList').innerHTML = incHTML;
 
-            // 3. Calculate & Render Expenses (Paisa Gaya)
+            // 3. Calculate & Render Expenses
             let totalMalInvestment = 0;
             let totalRunningExpense = 0;
             let expHTML = '';
@@ -498,10 +422,15 @@
             let visibleExpensesCount = 0;
             
             reversedExpenses.forEach((exp) => {
+                let amt = parseFloat(exp.amount) || 0;
+                
+                // 🔥 FIX: All-Time Outflow add kar rahe hain Cash In Hand ke liye
+                totalOutflowAllTime += amt;
+
+                // Agar filter me nahi hai to yahan se list me nahi dikhayega
                 if(!isDateInFilter(exp.date, filterType)) return;
 
                 visibleExpensesCount++;
-                let amt = parseFloat(exp.amount) || 0;
                 let isMal = (exp.type === "Raw Material (Dhaan/Mal)");
                 
                 if(isMal) {
@@ -513,7 +442,6 @@
                 let amountClass = isMal ? "inv-amount" : "exp-amount";
                 let amountPrefix = isMal ? "📦 ₹" : "🔥 ₹";
 
-                // ID string format ki problem fix kar di gayi hai (quotes around ID)
                 expHTML += `
                     <div class="exp-item" style="border-left: 4px solid ${isMal ? '#4da6ff' : 'var(--danger)'};">
                         <div class="exp-details">
@@ -536,8 +464,8 @@
 
             let totalOutflow = totalMalInvestment + totalRunningExpense;
 
-            // 4. Profit / Loss
-            let netProfit = totalSales - totalOutflow;
+            // Profit Calculation (Total Bikri - Kharcha - Mal)
+            let netProfit = totalSales - totalOutflow; 
             let profitCard = document.getElementById('profitCard');
             let profitLabel = document.getElementById('profitLabel');
             let profitValue = document.getElementById('netProfit');
@@ -552,13 +480,18 @@
                 profitValue.innerText = `₹${formatMoney(Math.abs(netProfit))}`;
             }
 
-            let cashInHand = totalCollected - totalOutflow;
+            // 🔥 FIX: Galle Ka Cash ab All-Time chalega
+            let cashInHand = totalCollectedAllTime - totalOutflowAllTime;
 
             // Update DOM Numbers
             document.getElementById('totSales').innerText = `₹${formatMoney(totalSales)}`;
-            document.getElementById('totDue').innerText = `₹${formatMoney(totalMarketDue)}`;
-            document.getElementById('totExpense').innerText = `₹${formatMoney(totalOutflow)}`;
             
+            // Due aur Advance ka text update
+            let dueText = `₹${formatMoney(totalMarketDue)}`;
+            if(totalAdvance > 0) dueText += ` <span style="font-size:0.8rem;color:var(--success);display:block;">Advance Jama: ₹${formatMoney(totalAdvance)}</span>`;
+            document.getElementById('totDue').innerHTML = dueText;
+            
+            document.getElementById('totExpense').innerText = `₹${formatMoney(totalOutflow)}`;
             document.getElementById('totInvest').innerText = `₹${formatMoney(totalMalInvestment)}`;
             document.getElementById('totRunningExp').innerText = `₹${formatMoney(totalRunningExpense)}`;
             
