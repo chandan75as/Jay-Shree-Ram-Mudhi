@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
+    <!-- Apna Firebase Config File -->
+    <script src="my.js"></script>
+
     <style>
         :root {
             --bg-maroon: #5E1914;
@@ -20,13 +23,14 @@
             --edit: #4da6ff;
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 18px; }
+        /* Font size 18px se 15px kiya gaya consistency ke liye */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
         
         /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
-        .header-title { color: var(--gold); font-size: 2.2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; flex: 1;}
         
-        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 1.2rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
         .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
 
         /* Main Container */
@@ -36,31 +40,44 @@
         
         /* Add Form Area */
         .add-form { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
-        input { flex: 1; padding: 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.2rem; text-transform: capitalize; }
-        .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 12px 20px; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        input { flex: 1; padding: 10px 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.1rem; text-transform: capitalize; outline: none;}
+        input:focus { border-color: #fff; }
+        .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 10px 20px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-add:hover { transform: scale(1.02); filter: brightness(1.1); }
         
         /* Price List Area */
-        .list-header { font-size: 1.5rem; color: var(--gold); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .list-header { font-size: 1.3rem; color: var(--gold); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; }
         
-        .price-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; }
+        .price-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; }
         .price-item:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
         
-        .prod-name { font-size: 1.3rem; font-weight: bold; }
-        .prod-rate { font-size: 1.3rem; color: var(--gold); font-weight: bold; }
+        .prod-name { font-size: 1.2rem; font-weight: bold; }
+        .prod-rate { font-size: 1.2rem; color: var(--gold); font-weight: bold; }
         
         .actions { display: flex; gap: 10px; }
-        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; padding: 5px; }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; transition: 0.2s;}
+        .btn-icon:hover { transform: scale(1.2); }
         .btn-icon.edit { color: var(--edit); }
         .btn-icon.del { color: var(--danger); }
 
-        #dbStatus { font-size: 1rem; color: #aaa; text-align: center; margin-top: 10px; font-weight: bold; }
+        #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: 5px; font-weight: bold; }
         
         /* Edit Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 30px; border-radius: 12px; width: 350px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 35px; color: var(--gold); cursor: pointer; font-weight: bold; }
-        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.2rem; border-radius: 6px; }
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 350px; position: relative; }
+        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.1rem; border-radius: 6px; transition: 0.2s;}
+        .btn-save:hover { filter: brightness(1.1); }
 
+        /* Toast Notification */
+        #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
+        .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -68,10 +85,11 @@
     <header>
         <a href="index.html" class="back-btn">⬅ Back to Home</a>
         <h1 class="header-title">Our Global Price List</h1>
-        <div style="width: 100px;"></div> <!-- Spacer for centering -->
+        <div style="width: 130px;"></div> <!-- Spacer for centering -->
     </header>
 
-    <div id="dbStatus">Loading Cloud Data... ⏳</div>
+    <div id="dbStatus">Loading Data... ⏳</div>
+    <div id="toastBox"></div>
 
     <div class="main-container">
         <div class="price-card">
@@ -95,8 +113,8 @@
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeEditModal()">&times;</span>
-            <h3 style="color:var(--gold); text-align:center; margin-top:0;">Edit Product Rate</h3>
-            <input type="hidden" id="editIndex">
+            <h3 style="color:var(--gold); text-align:center; margin-top:0; margin-bottom: 15px;">Edit Product Rate</h3>
+            <input type="hidden" id="editId">
             <input type="text" id="editProdName" placeholder="Product Name">
             <input type="number" id="editProdRate" placeholder="Rate (₹)">
             <button class="btn-save" onclick="saveEditedPrice()">Update Rate</button>
@@ -104,60 +122,143 @@
     </div>
 
     <script>
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function showToast(msg, type = 'info') {
+            let toastBox = document.getElementById('toastBox');
+            let toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            let icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+            toastBox.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
         function autoCapitalize(text) {
             if (!text) return text;
             return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
-        // ==========================================
-        // FIREBASE SETUP
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
-            authDomain: "jay-shree-ram-mudhi.firebaseapp.com",
-            databaseURL: "https://jay-shree-ram-mudhi-default-rtdb.firebaseio.com",
-            projectId: "jay-shree-ram-mudhi",
-            storageBucket: "jay-shree-ram-mudhi.firebasestorage.app",
-            messagingSenderId: "146218859864",
-            appId: "1:146218859864:web:56a4dac1c0c20a3281b92d",
-            measurementId: "G-Z86Z8VSQKT"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const dbRef = database.ref('appData/mainState');
+        // Yeh function data ko safely format karega taaki expenses delete na hon aur nulls hat jayein
+        function normalizeData(data) {
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [] };
+            
+            let safePlaces = (data.places || []).filter(p => p != null);
+            let safeCustomers = (data.customers || []).filter(c => c != null);
+            let safeExpenses = (data.expenses || []).filter(e => e != null);
+            let safeDefaultPrices = (data.defaultPrices || []).filter(p => p != null);
+            
+            safeCustomers.forEach(c => {
+                if (!c.id) c.id = generateId(); 
+                c.history = (c.history || []).filter(h => h != null);
+                c.history.forEach(h => { if (!h.id) h.id = generateId(); });
+                c.priceList = (c.priceList || []).filter(p => p != null);
+                c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
+            });
 
-        let state = { places: [], customers: [], defaultPrices: [] };
-        
-        // CLOUD SYNC
+            safeExpenses.forEach(e => {
+                if(!e.id || typeof e.id === 'number') e.id = generateId();
+            });
+
+            safeDefaultPrices.forEach(p => {
+                if(!p.id) p.id = generateId();
+            });
+
+            return {
+                places: safePlaces,
+                customers: safeCustomers,
+                defaultPrices: safeDefaultPrices,
+                expenses: safeExpenses
+            };
+        }
+
+        // ==========================================
+        // APP LOGIC & SYNC
+        // ==========================================
+        let state = { places: [], customers: [], defaultPrices: [], expenses: [] };
+
+        let localData = localStorage.getItem('jsrm_state');
+        if (localData) {
+            state = normalizeData(JSON.parse(localData));
+            renderPrices();
+        }
+
+        // dbRef comes from my.js
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
-                let cloudData = snapshot.val();
-                state.places = cloudData.places || [];
-                state.customers = cloudData.customers || [];
-                state.defaultPrices = cloudData.defaultPrices || []; // Naya array global prices ke liye
-            } 
-            document.getElementById('dbStatus').innerHTML = "Cloud Synced 🟢";
-            document.getElementById('dbStatus').style.color = "#4CAF50";
-            renderPrices(); 
+                if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
+                    saveToCloud(); 
+                } else {
+                    state = normalizeData(snapshot.val());
+                    localStorage.setItem('jsrm_state', JSON.stringify(state));
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    updateNetworkStatus(true);
+                    renderPrices(); 
+                }
+            }
         }, (error) => {
             document.getElementById('dbStatus').innerHTML = "Database Error 🔴";
             document.getElementById('dbStatus').style.color = "#ff4d4d";
         });
 
         function saveToCloud() { 
-            dbRef.set(state).catch((error) => { alert("Data save nahi hua!"); });
+            localStorage.setItem('jsrm_state', JSON.stringify(state));
+            localStorage.setItem('jsrm_sync_pending', 'true');
+            renderPrices();
+
+            if (navigator.onLine) {
+                dbRef.set(state).then(() => {
+                    localStorage.setItem('jsrm_sync_pending', 'false');
+                    updateNetworkStatus(true);
+                }).catch((error) => { 
+                    updateNetworkStatus(false);
+                    showToast("Cloud par save nahi ho paya!", "error");
+                });
+            } else {
+                updateNetworkStatus(false);
+            }
+        }
+
+        window.addEventListener('online', () => {
+            showToast("Internet wapas aa gaya! Syncing...", "success");
+            if (localStorage.getItem('jsrm_sync_pending') === 'true') {
+                document.getElementById('dbStatus').innerHTML = "Syncing to Cloud... ⏳";
+                saveToCloud(); 
+            } else {
+                updateNetworkStatus(true);
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            showToast("Internet band hai. Data phone me save hoga.", "error");
+            updateNetworkStatus(false);
+        });
+
+        function updateNetworkStatus(isOnline) {
+            let statusEl = document.getElementById('dbStatus');
+            if(isOnline) {
+                statusEl.innerHTML = "Cloud Synced 🟢";
+                statusEl.style.color = "#4CAF50";
+            } else {
+                statusEl.innerHTML = "Offline Mode (Locally Saved) 📴";
+                statusEl.style.color = "#ff9800";
+            }
         }
 
         // ==========================================
-        // ADD, EDIT, DELETE LOGIC
+        // ADD, EDIT, DELETE LOGIC (Unique ID based)
         // ==========================================
         function addGlobalPrice() {
             let name = autoCapitalize(document.getElementById('newProdName').value.trim());
             let rate = parseFloat(document.getElementById('newProdRate').value);
             
             if(!name || isNaN(rate)) {
-                alert("Product ka naam aur price sahi se daalein!");
+                showToast("Product ka naam aur price sahi se daalein!", "error");
                 return;
             }
 
@@ -165,30 +266,34 @@
             
             // Duplicate check
             if(state.defaultPrices.find(p => p.prodName.toLowerCase() === name.toLowerCase())) {
-                alert("Yeh product pehle se list mein hai!");
+                showToast("Yeh product pehle se list mein hai!", "error");
                 return;
             }
 
-            state.defaultPrices.push({ prodName: name, rate: rate });
+            state.defaultPrices.push({ id: generateId(), prodName: name, rate: rate });
             
             document.getElementById('newProdName').value = "";
             document.getElementById('newProdRate').value = "";
+            showToast("Product Add Ho Gaya!", "success");
             saveToCloud();
         }
 
-        function deleteGlobalPrice(index) {
+        function deleteGlobalPrice(id) {
             if(confirm("Kya aap sach mein is product ko list se hatana chahte hain?")) {
-                state.defaultPrices.splice(index, 1);
+                state.defaultPrices = state.defaultPrices.filter(p => p.id !== id);
+                showToast("Product Delete Ho Gaya!", "success");
                 saveToCloud();
             }
         }
 
-        function openEditModal(index) {
-            let p = state.defaultPrices[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('editProdName').value = p.prodName;
-            document.getElementById('editProdRate').value = p.rate;
-            document.getElementById('editModal').style.display = 'flex';
+        function openEditModal(id) {
+            let p = state.defaultPrices.find(x => x.id === id);
+            if(p) {
+                document.getElementById('editId').value = id;
+                document.getElementById('editProdName').value = p.prodName;
+                document.getElementById('editProdRate').value = p.rate;
+                document.getElementById('editModal').style.display = 'flex';
+            }
         }
 
         function closeEditModal() {
@@ -196,15 +301,23 @@
         }
 
         function saveEditedPrice() {
-            let index = document.getElementById('editIndex').value;
+            let id = document.getElementById('editId').value;
             let name = autoCapitalize(document.getElementById('editProdName').value.trim());
             let rate = parseFloat(document.getElementById('editProdRate').value);
 
-            if(!name || isNaN(rate)) return;
+            if(!name || isNaN(rate)) {
+                showToast("Sahi details daalein!", "error");
+                return;
+            }
 
-            state.defaultPrices[index] = { prodName: name, rate: rate };
-            closeEditModal();
-            saveToCloud();
+            let pIndex = state.defaultPrices.findIndex(x => x.id === id);
+            if(pIndex > -1) {
+                state.defaultPrices[pIndex].prodName = name;
+                state.defaultPrices[pIndex].rate = rate;
+                showToast("Rate Update Ho Gaya!", "success");
+                closeEditModal();
+                saveToCloud();
+            }
         }
 
         // ==========================================
@@ -219,14 +332,14 @@
                 return;
             }
 
-            listDiv.innerHTML = pList.map((p, index) => `
+            listDiv.innerHTML = pList.map((p) => `
                 <div class="price-item">
                     <div class="prod-name">${p.prodName}</div>
                     <div style="display:flex; align-items:center; gap:15px;">
                         <div class="prod-rate">₹${p.rate}</div>
                         <div class="actions">
-                            <button class="btn-icon edit" onclick="openEditModal(${index})" title="Edit Price">✏️</button>
-                            <button class="btn-icon del" onclick="deleteGlobalPrice(${index})" title="Delete Product">🗑️</button>
+                            <button class="btn-icon edit" onclick="openEditModal('${p.id}')" title="Edit Price">✏️</button>
+                            <button class="btn-icon del" onclick="deleteGlobalPrice('${p.id}')" title="Delete Product">🗑️</button>
                         </div>
                     </div>
                 </div>
