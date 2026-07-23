@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
+    <!-- Apna Firebase Config File -->
+    <script src="my.js"></script>
+
     <style>
         :root {
             --bg-maroon: #5E1914;
@@ -19,7 +22,8 @@
             --card-bg: rgba(0,0,0,0.3);
         }
 
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 16px; }
+        /* Font size 16px se 15px kiya gaya consistency ke liye */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
         
         /* Header & Filters */
         header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;}
@@ -206,6 +210,14 @@
     </div>
 
     <script>
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
         function showToast(msg, type = 'info') {
             let toastBox = document.getElementById('toastBox');
             let toast = document.createElement('div');
@@ -230,44 +242,53 @@
             return new Date(y, m - 1, d);
         }
 
-        // ==========================================
-        // FIREBASE SETUP & OFFLINE SYNC
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVGhebdM8r-N82dYlOtXuvJghM3FK_iwc",
-            authDomain: "jay-shree-ram-mudhi.firebaseapp.com",
-            databaseURL: "https://jay-shree-ram-mudhi-default-rtdb.firebaseio.com",
-            projectId: "jay-shree-ram-mudhi",
-            storageBucket: "jay-shree-ram-mudhi.firebasestorage.app",
-            messagingSenderId: "146218859864",
-            appId: "1:146218859864:web:56a4dac1c0c20a3281b92d",
-            measurementId: "G-Z86Z8VSQKT"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const dbRef = database.ref('appData/mainState');
+        // Fix null arrays and add missing IDs to old data
+        function normalizeData(data) {
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [] };
+            
+            let safePlaces = (data.places || []).filter(p => p != null);
+            let safeCustomers = (data.customers || []).filter(c => c != null);
+            let safeExpenses = (data.expenses || []).filter(e => e != null);
+            
+            safeCustomers.forEach(c => {
+                if (!c.id) c.id = generateId(); 
+                c.history = (c.history || []).filter(h => h != null);
+                c.history.forEach(h => { if (!h.id) h.id = generateId(); });
+                c.priceList = (c.priceList || []).filter(p => p != null);
+                c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
+            });
 
+            // Convert old number IDs to strings just in case
+            safeExpenses.forEach(e => {
+                if(!e.id || typeof e.id === 'number') e.id = generateId();
+            });
+
+            return {
+                places: safePlaces,
+                customers: safeCustomers,
+                defaultPrices: (data.defaultPrices || []).filter(p => p != null),
+                expenses: safeExpenses
+            };
+        }
+
+        // ==========================================
+        // APP LOGIC & OFFLINE SYNC
+        // ==========================================
         let state = { places: [], customers: [], defaultPrices: [], expenses: [] };
 
         let localData = localStorage.getItem('jsrm_state');
         if (localData) {
-            state = JSON.parse(localData);
+            state = normalizeData(JSON.parse(localData));
             setTimeout(calculateAndRender, 100); 
         }
         
+        // dbRef my.js file se aa raha hai
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
                     saveToCloud(); 
                 } else {
-                    let cloudData = snapshot.val();
-                    state = {
-                        places: cloudData.places || [],
-                        customers: cloudData.customers || [],
-                        defaultPrices: cloudData.defaultPrices || [],
-                        expenses: cloudData.expenses || [] 
-                    };
+                    state = normalizeData(snapshot.val());
                     localStorage.setItem('jsrm_state', JSON.stringify(state));
                     localStorage.setItem('jsrm_sync_pending', 'false');
                     updateNetworkStatus(true);
@@ -300,6 +321,7 @@
                 updateNetworkStatus(true);
             }
         });
+        
         window.addEventListener('offline', () => {
             showToast("Internet band hai. Data phone me save hoga.", "error");
             updateNetworkStatus(false);
@@ -415,15 +437,12 @@
                             custTotalBill_Filtered += amt;
                             custTotalPaid_Filtered += paid;
 
-                            // Agar paisa jama hua hai to list mein dikhao
                             if(paid > 0) {
-                                // Extract Exact Time from string (e.g., 🕒 10:30 AM : )
                                 let timeStr = ""; 
                                 if (h.prod) {
                                     let timeMatch = h.prod.match(/🕒\s*(.*?)\s*:/);
                                     if (timeMatch) timeStr = timeMatch[1].trim();
                                 }
-                                // Fallback to date if time is completely missing from older records
                                 if(!timeStr) timeStr = h.date;
 
                                 incomeRecords.push({
@@ -450,7 +469,6 @@
             incomeRecords.reverse(); // Latest on top
             let incHTML = '';
             incomeRecords.forEach(inc => {
-                // Agar 'Uncategorized' hai, toh usko hide kardo clean UI ke liye
                 let placeText = (inc.place && inc.place !== "Uncategorized") ? `📍 ${inc.place} &nbsp;|&nbsp; ` : "";
 
                 incHTML += `
@@ -495,6 +513,7 @@
                 let amountClass = isMal ? "inv-amount" : "exp-amount";
                 let amountPrefix = isMal ? "📦 ₹" : "🔥 ₹";
 
+                // ID string format ki problem fix kar di gayi hai (quotes around ID)
                 expHTML += `
                     <div class="exp-item" style="border-left: 4px solid ${isMal ? '#4da6ff' : 'var(--danger)'};">
                         <div class="exp-details">
@@ -504,7 +523,7 @@
                         </div>
                         <div class="${amountClass}">
                             ${amountPrefix}${formatMoney(amt)}
-                            <button class="btn-del" onclick="deleteExpense(${exp.id})" title="Delete">🗑️</button>
+                            <button class="btn-del" onclick="deleteExpense('${exp.id}')" title="Delete">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -577,7 +596,7 @@
                           today.getFullYear();
             
             state.expenses.push({
-                id: Date.now(), 
+                id: generateId(), 
                 type: type,
                 amount: amount,
                 desc: desc,
@@ -594,12 +613,9 @@
 
         function deleteExpense(expenseId) {
             if(confirm("Kya aap sach mein ye entry delete karna chahte hain?")) {
-                let index = state.expenses.findIndex(exp => exp.id === expenseId);
-                if(index !== -1) {
-                    state.expenses.splice(index, 1);
-                    showToast("Entry delete ho gayi 🗑️", "success");
-                    saveToCloud();
-                }
+                state.expenses = state.expenses.filter(exp => exp.id !== expenseId);
+                showToast("Entry delete ho gayi 🗑️", "success");
+                saveToCloud();
             }
         }
 
