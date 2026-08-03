@@ -23,7 +23,6 @@
             --edit: #4da6ff;
         }
 
-        /* Font size 18px se 15px kiya gaya */
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
         
         /* Header */
@@ -120,7 +119,6 @@
         @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
         @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
 
-        /* Scrollbar styling */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
@@ -142,13 +140,14 @@
 
         <div>
             <h1 class="header-title">Jay Shree Ram Mudhi</h1>
-            <div id="dbStatus">Loading Data... ⏳</div>
+            <div id="dbStatus">Connecting to Cloud... ⏳</div>
         </div>
 
         <div class="header-right">
             <div class="dropdown-container">
                 <button class="header-btn" onclick="toggleMenu('mainDrop', event)">☰</button>
                 <div id="mainDrop" class="dropdown right-drop">
+                    <a href="stock.html">📦 Stock Management</a> <!-- NEW STOCK OPTION -->
                     <a href="price.html">Our Price List</a>
                     <a href="staffmanagement.html">Staff Management</a>
                     <a href="calculation.html">Total Calculation</a>
@@ -208,9 +207,7 @@
             toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
             toastBox.appendChild(toast);
             
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
         function autoCapitalize(text) {
@@ -218,18 +215,21 @@
             return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
+        // 🔥 FIX: Pura database safe rakhne ke liye Normalize Function update kiya gaya
         function normalizeData(data) {
-            if(!data) return { places: [], customers: [], defaultPrices: [] };
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
             
             let safePlaces = (data.places || []).filter(p => p != null);
             let safeCustomers = (data.customers || []).filter(c => c != null);
+            let safeExpenses = (data.expenses || []).filter(e => e != null);
+            let safeStaff = (data.staff || []).filter(s => s != null);
+            let safeStocks = (data.stocks || []).filter(s => s != null);
+            let safeDefaultPrices = (data.defaultPrices || []).filter(p => p != null);
             
             safeCustomers.forEach(c => {
                 if (!c.id) c.id = generateId(); 
-                
                 c.history = (c.history || []).filter(h => h != null);
                 c.history.forEach(h => { if (!h.id) h.id = generateId(); });
-                
                 c.priceList = (c.priceList || []).filter(p => p != null);
                 c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
             });
@@ -237,14 +237,17 @@
             return {
                 places: safePlaces,
                 customers: safeCustomers,
-                defaultPrices: data.defaultPrices || []
+                defaultPrices: safeDefaultPrices,
+                expenses: safeExpenses,
+                staff: safeStaff,
+                stocks: safeStocks
             };
         }
 
         // ==========================================
-        // MAIN APP LOGIC (Firebase Config removed from here)
+        // MAIN APP LOGIC (ONLY ONLINE - FIREBASE)
         // ==========================================
-        let state = { places: [], customers: [], defaultPrices: [] };
+        let state = { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
         let activePlace = null;
         let activeCustomerId = null; 
         let isEditMode = false;
@@ -253,75 +256,27 @@
         let tempBillTotal = 0;
         let editingPriceId = null;
 
-        let localData = localStorage.getItem('jsrm_state');
-        if (localData) {
-            state = normalizeData(JSON.parse(localData));
-            render();
-        }
-
+        // Firebase Sync (Live Connection)
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
-                if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
-                    saveToCloud(); 
-                } else {
-                    state = normalizeData(snapshot.val());
-                    
-                    localStorage.setItem('jsrm_state', JSON.stringify(state));
-                    localStorage.setItem('jsrm_sync_pending', 'false');
-                    
-                    updateNetworkStatus(true);
-                    render(); 
-                }
-            } else if(!localData) { 
-                state = { places: [], customers: [], defaultPrices: [] }; 
+                state = normalizeData(snapshot.val());
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+                render();
+            } else {
+                state = normalizeData(null);
+                render();
             }
         });
 
+        // 🔥 FIX: Ab Pura State Save Hoga (Kharcha aur Staff delete nahi hoga)
         function saveToCloud() { 
-            localStorage.setItem('jsrm_state', JSON.stringify(state));
-            localStorage.setItem('jsrm_sync_pending', 'true');
-            render(); 
-
-            if (navigator.onLine) {
-                dbRef.set({ 
-                    places: state.places, 
-                    customers: state.customers,
-                    defaultPrices: state.defaultPrices || []
-                }).then(() => {
-                    localStorage.setItem('jsrm_sync_pending', 'false');
-                    updateNetworkStatus(true);
-                }).catch((error) => { 
-                    updateNetworkStatus(false);
-                });
-            } else {
-                updateNetworkStatus(false);
-            }
-        }
-
-        window.addEventListener('online', () => {
-            showToast("Internet wapas aa gaya! Sync shuru...", "success");
-            if (localStorage.getItem('jsrm_sync_pending') === 'true') {
-                document.getElementById('dbStatus').innerHTML = "Syncing to Cloud... ⏳";
-                saveToCloud(); 
-            } else {
-                updateNetworkStatus(true);
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            showToast("Internet band hai! Ab data phone mein save hoga.", "error");
-            updateNetworkStatus(false);
-        });
-
-        function updateNetworkStatus(isOnline) {
-            let statusEl = document.getElementById('dbStatus');
-            if(isOnline) {
-                statusEl.innerHTML = "Cloud Synced 🟢";
-                statusEl.style.color = "#4CAF50";
-            } else {
-                statusEl.innerHTML = "Offline Mode (Locally Saved) 📴";
-                statusEl.style.color = "#ff9800";
-            }
+            dbRef.set(state).then(() => {
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+            }).catch((error) => { 
+                showToast("Save karne me error aayi!", "error");
+            });
         }
 
         function toggleEditMode() {
@@ -497,7 +452,7 @@
                 let t = c.history.find(h => h.id === transId);
                 
                 content = `${closeBtnHTML}<h3>Edit Daily Record</h3>
-                           <p style="color:#aaa; font-size:0.85rem; text-align:center; margin-top:-10px;">(Dhyan rahe, yeh is din ka poora hisaab edit karega)</p>
+                           <p style="color:#aaa; font-size:0.85rem; text-align:center; margin-top:-10px;">(Dhyan rahe, is din ka poora hisaab edit karega. Isse stock update nahi hoga.)</p>
                            <textarea id="prod" rows="5" placeholder="Product Details (Ek ke neeche ek likhein)">${t.prod}</textarea>
                            <input id="amt" type="number" value="${t.amt}" placeholder="Total Bill Amount (₹)">
                            <input id="paid" type="number" value="${t.paid}" placeholder="Amount Paid (₹)">
@@ -677,12 +632,12 @@
             }
         }
 
+        // 🔥 FIX: Bill banne ke baad Stock Automatic Deduct Hoga
         function addTrans(custId) { 
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
             
             let timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
-            
             let prodString = tempBillItems.map(i => `${i.name} (x${i.qty})`).join(', ');
             
             if(prodString !== "") {
@@ -697,11 +652,21 @@
                 }
             }
             
+            // ===== STOCK DEDUCTION LOGIC =====
+            if(tempBillItems.length > 0 && state.stocks) {
+                tempBillItems.forEach(item => {
+                    let stockIndex = state.stocks.findIndex(s => s.name.toLowerCase() === item.name.toLowerCase());
+                    if(stockIndex !== -1) {
+                        state.stocks[stockIndex].qty -= item.qty; // Minus ho jayega
+                    }
+                });
+            }
+            // =================================
+
             let today = new Date().toLocaleDateString('en-GB');
             let c = state.customers.find(x => x.id === custId);
             
             if(!c.history) c.history = [];
-            
             let existingEntry = c.history.find(h => h.date === today);
             
             if(existingEntry) {
@@ -722,7 +687,7 @@
                 }); 
             }
             
-            showToast("Hisaab Save Ho Gaya! ✅", "success");
+            showToast("Hisaab Save & Stock Updated! ✅", "success");
             saveToCloud(); closeModal();
         }
         
@@ -739,7 +704,7 @@
         }
         
         function deleteTrans(custId, transId) {
-            if(confirm("Dhyan rahe: Kya aap is din ka poora record delete karna chahte hain?")) { 
+            if(confirm("Dhyan rahe: Kya aap is din ka poora record delete karna chahte hain? (Note: Stock wapas add nahi hoga)")) { 
                 let c = state.customers.find(x => x.id === custId);
                 c.history = c.history.filter(x => x.id !== transId);
                 showToast("Record delete ho gaya!", "success");
@@ -800,7 +765,6 @@
                 }
 
                 let todayStr = new Date().toLocaleDateString('en-GB');
-                
                 let mappedHistory = historyArr.map((h) => ({...h}));
                 let reversedHistory = mappedHistory.reverse();
                 
