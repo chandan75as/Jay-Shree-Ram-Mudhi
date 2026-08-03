@@ -34,8 +34,8 @@
         .price-card { background: rgba(0,0,0,0.3); border: 2px solid var(--gold); border-radius: 12px; width: 100%; max-width: 650px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         
         .add-form { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
-        input { flex: 1; padding: 10px 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.1rem; text-transform: capitalize; outline: none;}
-        input:focus { border-color: #fff; }
+        input, select { flex: 1; padding: 10px 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.1rem; outline: none; transition: 0.2s;}
+        input:focus, select:focus { border-color: #fff; }
         input[type="password"] { text-transform: none; text-align: center; font-size: 1.5rem; letter-spacing: 5px; }
         .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 10px 20px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-add:hover { transform: scale(1.02); filter: brightness(1.1); }
@@ -45,7 +45,7 @@
         .price-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; }
         .price-item:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
         
-        .prod-name { font-size: 1.2rem; font-weight: bold; }
+        .prod-name { font-size: 1.2rem; font-weight: bold; text-transform: capitalize;}
         .prod-rate { font-size: 1.2rem; color: #4da6ff; font-weight: bold; display: flex; align-items: center; gap: 5px; }
         
         .actions { display: flex; gap: 10px; }
@@ -102,7 +102,10 @@
         <div class="price-card">
             
             <div class="add-form">
-                <input type="text" id="newStockName" placeholder="Product Name (e.g. Dasi Mudhi)">
+                <!-- DROPDOWN FROM PRICE LIST -->
+                <select id="newStockName">
+                    <option value="" disabled selected>-- Select Product --</option>
+                </select>
                 <input type="number" id="newStockQty" placeholder="Add Qty" style="max-width: 120px;">
                 <button class="btn-add" onclick="addStock()">+ Add</button>
             </div>
@@ -162,7 +165,6 @@
             toastBox.appendChild(toast);
             setTimeout(() => { toast.remove(); }, 3000);
         }
-        function autoCapitalize(text) { return text ? text.replace(/\b\w/g, char => char.toUpperCase()) : text; }
         
         function getTimeString() {
             return new Date().toLocaleString('en-IN', { hour12: true, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
@@ -196,6 +198,8 @@
                 state = normalizeData(snapshot.val());
                 document.getElementById('dbStatus').innerHTML = "Live 🟢";
                 document.getElementById('dbStatus').style.color = "#4CAF50";
+                
+                populateProductDropdown(); // <--- Dropdown yahan se load hoga
                 renderStock(); 
             }
         });
@@ -205,6 +209,24 @@
                 document.getElementById('dbStatus').innerHTML = "Live 🟢";
                 document.getElementById('dbStatus').style.color = "#4CAF50";
             }).catch(() => { showToast("Save failed!", "error"); });
+        }
+
+        // ==========================================
+        // FETCH PRODUCTS FROM PRICE.HTML
+        // ==========================================
+        function populateProductDropdown() {
+            let select = document.getElementById('newStockName');
+            let optionsHTML = '<option value="" disabled selected>-- Select Product --</option>';
+            
+            if (state.defaultPrices && state.defaultPrices.length > 0) {
+                state.defaultPrices.forEach(p => {
+                    optionsHTML += `<option value="${p.prodName}">${p.prodName}</option>`;
+                });
+            } else {
+                optionsHTML = '<option value="" disabled selected>Pehle Price List banayein!</option>';
+            }
+            
+            select.innerHTML = optionsHTML;
         }
 
         // ==========================================
@@ -238,11 +260,11 @@
         // ADD / EDIT / DELETE STOCK
         // ==========================================
         function addStock() {
-            let name = autoCapitalize(document.getElementById('newStockName').value.trim());
+            let name = document.getElementById('newStockName').value;
             let qty = parseFloat(document.getElementById('newStockQty').value);
             
             if(!name || isNaN(qty)) {
-                showToast("Product ka naam aur quantity sahi se daalein!", "error"); return;
+                showToast("Product select karein aur quantity daalein!", "error"); return;
             }
 
             if(!state.stocks) state.stocks = [];
@@ -327,7 +349,7 @@
             let s = state.stocks.find(x => x.id === id);
             if(!s) return;
             
-            document.getElementById('histTitle').innerHTML = `📜 History: ${s.name}`;
+            document.getElementById('histTitle').innerHTML = `📜 History: <span style="text-transform:capitalize;">${s.name}</span>`;
             let histContent = document.getElementById('historyContent');
             
             let hList = s.history || [];
