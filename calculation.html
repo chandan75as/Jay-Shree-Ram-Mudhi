@@ -5,18 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Total Calculation - Jay Shree Ram Mudhi</title>
     
-    <!-- CSS File Link (calculation.css alag file me hona chahiye) -->
     <link rel="stylesheet" href="calculation.css">
-
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-    <!-- Apna Firebase Config File -->
+    
     <script src="my.js"></script>
 </head>
 <body>
-
     <header>
         <a href="index.html" class="back-btn">⬅ Back</a>
         <h1 class="header-title">Total Business Calculation</h1>
@@ -44,12 +41,11 @@
         </div>
     </header>
 
-    <div id="dbStatus">Loading Data... ⏳</div>
+    <div id="dbStatus" style="font-size: 1rem; color: #ff9800; text-align: center; margin-top: -5px; padding-bottom: 5px; font-weight: bold;">Connecting... ⏳</div>
     <div id="toastBox"></div>
 
     <div class="main-container">
         
-        <!-- Dashboard Top Cards -->
         <div class="dashboard-grid">
             <div class="stat-card">
                 <div class="stat-title">Total Sales (Bikri)</div>
@@ -82,9 +78,7 @@
             </div>
         </div>
 
-        <!-- 3 Columns Bottom Section -->
         <div class="bottom-grid">
-            <!-- Col 1: Add Expense Form -->
             <div class="panel">
                 <div class="panel-title">Add Entry (Kharcha / Mal)</div>
                 <select id="expType">
@@ -101,34 +95,20 @@
                 <button class="btn-save" onclick="addExpense()">Save Entry</button>
             </div>
 
-            <!-- Col 2: Income History (Paisa Kahan Se Aaya) -->
             <div class="panel" style="border-color: var(--success);">
                 <div class="panel-title" style="color: var(--success); border-bottom-color: var(--success);">💰 Collection (Paisa Aaya)</div>
-                <div class="expense-list" id="incomeList">
-                    <!-- Income will be rendered here -->
-                </div>
+                <div class="expense-list" id="incomeList"></div>
             </div>
 
-            <!-- Col 3: Expense History (Paisa Kahan Gaya) -->
             <div class="panel" style="border-color: var(--danger);">
                 <div class="panel-title" style="color: var(--danger); border-bottom-color: var(--danger);" id="kharchaReportTitle">🔥 Kharcha (Paisa Gaya)</div>
-                <div class="expense-list" id="expenseList">
-                    <!-- Expenses will be rendered here -->
-                </div>
+                <div class="expense-list" id="expenseList"></div>
             </div>
         </div>
-
     </div>
 
-    <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        // ==========================================
-        // UTILITY FUNCTIONS
-        // ==========================================
-        
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 
         function showToast(msg, type = 'info') {
             let toastBox = document.getElementById('toastBox');
@@ -140,121 +120,57 @@
             setTimeout(() => { toast.remove(); }, 3000);
         }
 
-        function formatMoney(amount) {
-            return parseFloat(amount).toFixed(2).replace(/\.00$/, ''); 
-        }
-
-        function autoCapitalize(text) {
-            if (!text) return text;
-            return text.replace(/\b\w/g, char => char.toUpperCase());
-        }
-
+        function formatMoney(amount) { return parseFloat(amount).toFixed(2).replace(/\.00$/, ''); }
+        function autoCapitalize(text) { return text ? text.replace(/\b\w/g, c => c.toUpperCase()) : text; }
         function parseDateString(dateStr) {
-            if(!dateStr) return new Date(); // Safety check for empty date
+            if(!dateStr) return new Date(); 
             let parts = dateStr.split('/');
-            if(parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return new Date();
+            return (parts.length === 3) ? new Date(parts[2], parts[1] - 1, parts[0]) : new Date();
         }
 
+        // 🔥 FIX: Pura database extract karo taaki kharcha delete na ho
         function normalizeData(data) {
-            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [] };
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
             
             let safePlaces = (data.places || []).filter(p => p != null);
             let safeCustomers = (data.customers || []).filter(c => c != null);
             let safeExpenses = (data.expenses || []).filter(e => e != null);
+            let safeStaff = (data.staff || []).filter(s => s != null);
+            let safeStocks = (data.stocks || []).filter(s => s != null);
+            let safeDefaultPrices = (data.defaultPrices || []).filter(p => p != null);
             
-            safeCustomers.forEach(c => {
-                if (!c.id) c.id = generateId(); 
-                c.history = (c.history || []).filter(h => h != null);
-                c.history.forEach(h => { if (!h.id) h.id = generateId(); });
-                c.priceList = (c.priceList || []).filter(p => p != null);
-                c.priceList.forEach(p => { if (!p.id) p.id = generateId(); });
-            });
-
-            safeExpenses.forEach(e => {
-                if(!e.id || typeof e.id === 'number') e.id = generateId();
-            });
+            safeExpenses.forEach(e => { if(!e.id) e.id = generateId(); });
 
             return {
                 places: safePlaces,
                 customers: safeCustomers,
-                defaultPrices: (data.defaultPrices || []).filter(p => p != null),
-                expenses: safeExpenses
+                defaultPrices: safeDefaultPrices,
+                expenses: safeExpenses,
+                staff: safeStaff,
+                stocks: safeStocks
             };
         }
 
-        // ==========================================
-        // APP LOGIC & OFFLINE SYNC
-        // ==========================================
-        let state = { places: [], customers: [], defaultPrices: [], expenses: [] };
+        let state = { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
 
-        let localData = localStorage.getItem('jsrm_state');
-        if (localData) {
-            state = normalizeData(JSON.parse(localData));
-            setTimeout(calculateAndRender, 100); 
-        }
-        
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
-                if(localStorage.getItem('jsrm_sync_pending') === 'true' && navigator.onLine) {
-                    saveToCloud(); 
-                } else {
-                    state = normalizeData(snapshot.val());
-                    localStorage.setItem('jsrm_state', JSON.stringify(state));
-                    localStorage.setItem('jsrm_sync_pending', 'false');
-                    updateNetworkStatus(true);
-                    calculateAndRender(); 
-                }
-            } 
+                state = normalizeData(snapshot.val());
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+                calculateAndRender(); 
+            }
         });
 
-        // 🔥 FIX: Firebase me sirf expenses update honge, pura data overwrite nahi hoga
+        // 🔥 FIX: Kharcha ab seedha save hoga pure state ke sath
         function saveToCloud() { 
-            localStorage.setItem('jsrm_state', JSON.stringify(state));
-            localStorage.setItem('jsrm_sync_pending', 'true');
-            calculateAndRender(); 
-
-            if (navigator.onLine) {
-                dbRef.child('expenses').set(state.expenses).then(() => {
-                    localStorage.setItem('jsrm_sync_pending', 'false');
-                    updateNetworkStatus(true);
-                }).catch(() => { updateNetworkStatus(false); });
-            } else {
-                updateNetworkStatus(false);
-            }
+            dbRef.set(state).then(() => {
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+            }).catch(() => { showToast("Save error!", "error"); });
         }
 
-        window.addEventListener('online', () => {
-            showToast("Internet wapas aa gaya! Syncing...", "success");
-            if (localStorage.getItem('jsrm_sync_pending') === 'true') {
-                document.getElementById('dbStatus').innerHTML = "Syncing to Cloud... ⏳";
-                saveToCloud(); 
-            } else {
-                updateNetworkStatus(true);
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            showToast("Internet band hai. Data phone me save hoga.", "error");
-            updateNetworkStatus(false);
-        });
-
-        function updateNetworkStatus(isOnline) {
-            let statusEl = document.getElementById('dbStatus');
-            if(isOnline) {
-                statusEl.innerHTML = "Cloud Synced 🟢";
-                statusEl.style.color = "#4CAF50";
-            } else {
-                statusEl.innerHTML = "Offline Mode (Locally Saved) 📴";
-                statusEl.style.color = "#ff9800";
-            }
-        }
-
-        // ==========================================
         // DATE FILTER LOGIC
-        // ==========================================
         function handleFilterChange() {
             let filterType = document.getElementById('timeFilter').value;
             let customDateInput = document.getElementById('customDateInput');
@@ -263,11 +179,8 @@
             customDateInput.style.display = 'none';
             dateRangeContainer.style.display = 'none';
 
-            if(filterType === 'custom') {
-                customDateInput.style.display = 'inline-block';
-            } else if(filterType === 'date_range') {
-                dateRangeContainer.style.display = 'flex';
-            }
+            if(filterType === 'custom') customDateInput.style.display = 'inline-block';
+            else if(filterType === 'date_range') dateRangeContainer.style.display = 'flex';
             calculateAndRender();
         }
 
@@ -280,29 +193,21 @@
             let currentMonth = String(currentMonthNum).padStart(2, '0');
             let currentYear = todayDate.getFullYear();
 
-            let prevMonthNum = currentMonthNum - 1;
-            let prevMonthYear = currentYear;
-            if(prevMonthNum === 0) { prevMonthNum = 12; prevMonthYear = currentYear - 1; }
+            let prevMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+            let prevMonthYear = currentMonthNum === 1 ? currentYear - 1 : currentYear;
             let prevMonthStr = String(prevMonthNum).padStart(2, '0');
             let prevYearStr = String(currentYear - 1);
             
             let [d, m, y] = dateStr.split('/');
-            
-            // 🔥 FIX: Date aur Month par hamesha '0' laga rahega jisse filter sahi kaam kare
             d = String(d).padStart(2, '0');
             m = String(m).padStart(2, '0');
 
-            if (filterType === 'today') {
-                return (d === currentDay && m === currentMonth && y === String(currentYear));
-            } else if (filterType === 'month') {
-                return (m === currentMonth && y === String(currentYear));
-            } else if (filterType === 'prev_month') {
-                return (m === prevMonthStr && y === String(prevMonthYear));
-            } else if (filterType === 'year') {
-                return (y === String(currentYear));
-            } else if (filterType === 'prev_year') {
-                return (y === prevYearStr);
-            } else if (filterType === 'custom') {
+            if (filterType === 'today') return (d === currentDay && m === currentMonth && y === String(currentYear));
+            else if (filterType === 'month') return (m === currentMonth && y === String(currentYear));
+            else if (filterType === 'prev_month') return (m === prevMonthStr && y === String(prevMonthYear));
+            else if (filterType === 'year') return (y === String(currentYear));
+            else if (filterType === 'prev_year') return (y === prevYearStr);
+            else if (filterType === 'custom') {
                 let customSelected = document.getElementById('customDateInput').value;
                 if(!customSelected) return false;
                 let [cy, cm, cd] = customSelected.split('-');
@@ -315,178 +220,105 @@
                 let entryDate = parseDateString(`${d}/${m}/${y}`);
                 let startDate = new Date(startVal);
                 let endDate = new Date(endVal);
-                
                 startDate.setHours(0,0,0,0);
                 endDate.setHours(23,59,59,999);
-
                 return (entryDate >= startDate && entryDate <= endDate);
             }
             return true;
         }
 
-        // ==========================================
-        // CALCULATIONS & RENDER
-        // ==========================================
         function calculateAndRender() {
             let filterType = document.getElementById('timeFilter').value;
-            
-            let totalSales = 0;
-            
-            // 🔥 FIX: Galle ke liye All-Time variables
-            let totalCollectedAllTime = 0;
-            let totalOutflowAllTime = 0;
-            
-            let totalMarketDue = 0; 
-            let totalAdvance = 0;
-
+            let totalSales = 0, totalCollectedAllTime = 0, totalOutflowAllTime = 0, totalMarketDue = 0, totalAdvance = 0;
             let incomeRecords = []; 
 
-            // 1. Calculate Sales, Dues & Build Income History
             state.customers.forEach(c => {
-                let custTotalBill_Filtered = 0;
-                let custTotalBill_AllTime = 0;
-                let custTotalPaid_AllTime = 0;
+                let custTotalBill_Filtered = 0, custTotalBill_AllTime = 0, custTotalPaid_AllTime = 0;
                 
                 if(c.history) {
                     c.history.forEach(h => {
                         let amt = parseFloat(h.amt) || 0;
                         let paid = parseFloat(h.paid) || 0;
                         
-                        // All-time variables hamesha add honge
                         custTotalBill_AllTime += amt;
                         custTotalPaid_AllTime += paid;
                         totalCollectedAllTime += paid;
 
-                        // Filter wale variables me sirf selected date wala data jayega
                         if(isDateInFilter(h.date, filterType)) {
                             custTotalBill_Filtered += amt;
-
                             if(paid > 0) {
-                                let timeStr = ""; 
+                                let timeStr = h.date; 
                                 if (h.prod) {
                                     let timeMatch = h.prod.match(/🕒\s*(.*?)\s*:/);
                                     if (timeMatch) timeStr = timeMatch[1].trim();
                                 }
-                                if(!timeStr) timeStr = h.date;
-
-                                incomeRecords.push({
-                                    custName: c.name,
-                                    place: c.place,
-                                    timeStr: timeStr,
-                                    amount: paid
-                                });
+                                incomeRecords.push({ custName: c.name, place: c.place, timeStr: timeStr, amount: paid });
                             }
                         }
                     });
                 }
-                
                 totalSales += custTotalBill_Filtered;
-
-                // 🔥 FIX: Advance Payment aur Due calculation
                 let netCustDue = custTotalBill_AllTime - custTotalPaid_AllTime;
-                if(netCustDue > 0) {
-                    totalMarketDue += netCustDue; 
-                } else if (netCustDue < 0) {
-                    totalAdvance += Math.abs(netCustDue); 
-                }
+                if(netCustDue > 0) totalMarketDue += netCustDue; 
+                else if (netCustDue < 0) totalAdvance += Math.abs(netCustDue); 
             });
 
-            // 2. Render Collection History
-            incomeRecords.reverse(); 
             let incHTML = '';
-            incomeRecords.forEach(inc => {
+            incomeRecords.reverse().forEach(inc => {
                 let placeText = (inc.place && inc.place !== "Uncategorized") ? `📍 ${inc.place} &nbsp;|&nbsp; ` : "";
-
-                incHTML += `
-                    <div class="exp-item" style="border-left: 4px solid var(--success);">
-                        <div class="exp-details">
-                            <span class="exp-type">👤 ${inc.custName}</span>
-                            <span class="exp-date">${placeText}🕒 ${inc.timeStr}</span>
-                            <span class="exp-desc" style="color:var(--success);">Cash Received / Jama</span>
-                        </div>
-                        <div class="inc-amount">+₹${formatMoney(inc.amount)}</div>
-                    </div>
-                `;
+                incHTML += `<div class="exp-item" style="border-left: 4px solid var(--success);">
+                                <div class="exp-details">
+                                    <span class="exp-type">👤 ${inc.custName}</span>
+                                    <span class="exp-date">${placeText}🕒 ${inc.timeStr}</span>
+                                    <span class="exp-desc" style="color:var(--success);">Cash Received / Jama</span>
+                                </div>
+                                <div class="inc-amount">+₹${formatMoney(inc.amount)}</div>
+                            </div>`;
             });
-            if(incomeRecords.length === 0) {
-                incHTML = '<div style="text-align:center; padding:30px; color:#aaa; font-size:1rem;">Is samay koi collection nahi hua.</div>';
-            }
-            document.getElementById('incomeList').innerHTML = incHTML;
+            document.getElementById('incomeList').innerHTML = incHTML || '<div style="text-align:center; padding:30px; color:#aaa;">Koi collection nahi hua.</div>';
 
-            // 3. Calculate & Render Expenses
-            let totalMalInvestment = 0;
-            let totalRunningExpense = 0;
+            let totalMalInvestment = 0, totalRunningExpense = 0;
             let expHTML = '';
             
-            let reversedExpenses = [...(state.expenses || [])].reverse();
-            let visibleExpensesCount = 0;
-            
-            reversedExpenses.forEach((exp) => {
+            [...(state.expenses || [])].reverse().forEach((exp) => {
                 let amt = parseFloat(exp.amount) || 0;
-                
-                // 🔥 FIX: All-Time Outflow add kar rahe hain Cash In Hand ke liye
                 totalOutflowAllTime += amt;
 
-                // Agar filter me nahi hai to yahan se list me nahi dikhayega
                 if(!isDateInFilter(exp.date, filterType)) return;
 
-                visibleExpensesCount++;
                 let isMal = (exp.type === "Raw Material (Dhaan/Mal)");
+                if(isMal) totalMalInvestment += amt; else totalRunningExpense += amt;
                 
-                if(isMal) {
-                    totalMalInvestment += amt;
-                } else {
-                    totalRunningExpense += amt;
-                }
-                
-                let amountClass = isMal ? "inv-amount" : "exp-amount";
-                let amountPrefix = isMal ? "📦 ₹" : "🔥 ₹";
-
-                expHTML += `
-                    <div class="exp-item" style="border-left: 4px solid ${isMal ? '#4da6ff' : 'var(--danger)'};">
-                        <div class="exp-details">
-                            <span class="exp-type">${exp.type}</span>
-                            <span class="exp-date">📅 ${exp.date}</span>
-                            <span class="exp-desc">${exp.desc || 'No details added'}</span>
-                        </div>
-                        <div class="${amountClass}">
-                            ${amountPrefix}${formatMoney(amt)}
-                            <button class="btn-del" onclick="deleteExpense('${exp.id}')" title="Delete">🗑️</button>
-                        </div>
-                    </div>
-                `;
+                expHTML += `<div class="exp-item" style="border-left: 4px solid ${isMal ? '#4da6ff' : 'var(--danger)'};">
+                                <div class="exp-details">
+                                    <span class="exp-type">${exp.type}</span>
+                                    <span class="exp-date">📅 ${exp.date}</span>
+                                    <span class="exp-desc">${exp.desc || 'No details'}</span>
+                                </div>
+                                <div class="${isMal ? "inv-amount" : "exp-amount"}">
+                                    ${isMal ? "📦 ₹" : "🔥 ₹"}${formatMoney(amt)}
+                                    <button class="btn-del" onclick="deleteExpense('${exp.id}')">🗑️</button>
+                                </div>
+                            </div>`;
             });
-
-            if(visibleExpensesCount === 0) {
-                expHTML = '<div style="text-align:center; padding:30px; color:#aaa; font-size:1rem;">Is samay koi kharcha nahi hua.</div>';
-            }
-            document.getElementById('expenseList').innerHTML = expHTML;
+            document.getElementById('expenseList').innerHTML = expHTML || '<div style="text-align:center; padding:30px; color:#aaa;">Koi kharcha nahi hua.</div>';
 
             let totalOutflow = totalMalInvestment + totalRunningExpense;
-
-            // Profit Calculation (Total Bikri - Kharcha - Mal)
             let netProfit = totalSales - totalOutflow; 
-            let profitCard = document.getElementById('profitCard');
-            let profitLabel = document.getElementById('profitLabel');
-            let profitValue = document.getElementById('netProfit');
-
-            if(netProfit >= 0) {
-                profitCard.className = "stat-card card-profit";
-                profitLabel.innerText = "Net Profit (Fayda)";
-                profitValue.innerText = `₹${formatMoney(netProfit)}`;
-            } else {
-                profitCard.className = "stat-card card-loss";
-                profitLabel.innerText = "Net Loss (Nuksaan)";
-                profitValue.innerText = `₹${formatMoney(Math.abs(netProfit))}`;
-            }
-
-            // 🔥 FIX: Galle Ka Cash ab All-Time chalega
             let cashInHand = totalCollectedAllTime - totalOutflowAllTime;
 
-            // Update DOM Numbers
+            let profitCard = document.getElementById('profitCard');
+            if(netProfit >= 0) {
+                profitCard.className = "stat-card card-profit";
+                document.getElementById('profitLabel').innerText = "Net Profit (Fayda)";
+                document.getElementById('netProfit').innerText = `₹${formatMoney(netProfit)}`;
+            } else {
+                profitCard.className = "stat-card card-loss";
+                document.getElementById('profitLabel').innerText = "Net Loss (Nuksaan)";
+                document.getElementById('netProfit').innerText = `₹${formatMoney(Math.abs(netProfit))}`;
+            }
+
             document.getElementById('totSales').innerText = `₹${formatMoney(totalSales)}`;
-            
-            // Due aur Advance ka text update
             let dueText = `₹${formatMoney(totalMarketDue)}`;
             if(totalAdvance > 0) dueText += ` <span style="font-size:0.8rem;color:var(--success);display:block;">Advance Jama: ₹${formatMoney(totalAdvance)}</span>`;
             document.getElementById('totDue').innerHTML = dueText;
@@ -494,25 +326,9 @@
             document.getElementById('totExpense').innerText = `₹${formatMoney(totalOutflow)}`;
             document.getElementById('totInvest').innerText = `₹${formatMoney(totalMalInvestment)}`;
             document.getElementById('totRunningExp').innerText = `₹${formatMoney(totalRunningExpense)}`;
-            
             document.getElementById('cashInHand').innerText = `₹${formatMoney(cashInHand)}`;
-            
-            // Update Title Based on Date Selected
-            let reportTitle = '🔥 Kharcha (Paisa Gaya)';
-            if (filterType === 'date_range') {
-                let sVal = document.getElementById('startDateInput').value;
-                let eVal = document.getElementById('endDateInput').value;
-                if(sVal && eVal) {
-                    reportTitle = `🔥 Kharcha: ${sVal.split('-').reverse().join('/')} se ${eVal.split('-').reverse().join('/')}`;
-                }
-            } else if (filterType === 'today') { reportTitle = '🔥 Aaj Ka Kharcha'; }
-            
-            document.getElementById('kharchaReportTitle').innerText = reportTitle;
         }
 
-        // ==========================================
-        // EXPENSE ACTIONS
-        // ==========================================
         function addExpense() {
             let type = document.getElementById('expType').value;
             let amount = parseFloat(document.getElementById('expAmount').value);
@@ -524,22 +340,11 @@
             if(!state.expenses) state.expenses = [];
             
             let today = new Date();
-            let dateStr = String(today.getDate()).padStart(2, '0') + '/' + 
-                          String(today.getMonth() + 1).padStart(2, '0') + '/' + 
-                          today.getFullYear();
+            let dateStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
             
-            state.expenses.push({
-                id: generateId(), 
-                type: type,
-                amount: amount,
-                desc: desc,
-                date: dateStr
-            });
+            state.expenses.push({ id: generateId(), type: type, amount: amount, desc: desc, date: dateStr });
 
-            document.getElementById('expType').value = "";
-            document.getElementById('expAmount').value = "";
-            document.getElementById('expDesc').value = "";
-
+            document.getElementById('expType').value = ""; document.getElementById('expAmount').value = ""; document.getElementById('expDesc').value = "";
             showToast("Kharcha Save Ho Gaya ✅", "success");
             saveToCloud();
         }
@@ -555,12 +360,9 @@
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 let act = document.activeElement;
-                if(act.id === 'expType' || act.id === 'expAmount' || act.id === 'expDesc') {
-                    addExpense();
-                }
+                if(act.id === 'expType' || act.id === 'expAmount' || act.id === 'expDesc') addExpense();
             }
         });
-
     </script>
 </body>
 </html>
