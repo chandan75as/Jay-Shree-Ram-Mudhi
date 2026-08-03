@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Management - Jay Shree Ram Mudhi</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <!-- Apna Firebase Config File -->
+    <script src="my.js"></script>
+
+    <style>
+        :root {
+            --bg-maroon: #5E1914;
+            --gold: #D4AF37;
+            --white: #FDF7E3;
+            --danger: #ff4d4d;
+            --success: #28a745;
+            --edit: #4da6ff;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-maroon); color: var(--white); height: 100vh; display: flex; flex-direction: column; font-size: 15px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .header-title { color: var(--gold); font-size: 2rem; font-weight: bold; text-transform: uppercase; margin: 0; text-align: center; flex: 1;}
+        
+        .back-btn { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
+
+        .main-container { display: flex; flex-direction: column; align-items: center; padding: 30px; flex: 1; overflow-y: auto; }
+        .price-card { background: rgba(0,0,0,0.3); border: 2px solid var(--gold); border-radius: 12px; width: 100%; max-width: 600px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        
+        .add-form { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
+        input { flex: 1; padding: 10px 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.1rem; text-transform: capitalize; outline: none;}
+        input:focus { border-color: #fff; }
+        .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 10px 20px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-add:hover { transform: scale(1.02); filter: brightness(1.1); }
+        
+        .list-header { font-size: 1.3rem; color: var(--gold); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        
+        .price-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.2s; }
+        .price-item:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
+        
+        .prod-name { font-size: 1.2rem; font-weight: bold; }
+        .prod-rate { font-size: 1.2rem; color: #4da6ff; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        
+        .actions { display: flex; gap: 10px; }
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; transition: 0.2s;}
+        .btn-icon:hover { transform: scale(1.2); }
+        .btn-icon.edit { color: var(--edit); }
+        .btn-icon.del { color: var(--danger); }
+
+        #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: 5px; font-weight: bold; }
+        
+        /* Edit Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 350px; position: relative; }
+        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+        .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.1rem; border-radius: 6px; transition: 0.2s;}
+        .btn-save:hover { filter: brightness(1.1); }
+
+        #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
+        .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">⬅ Back to Home</a>
+        <h1 class="header-title">📦 Stock Management</h1>
+        <div style="width: 130px;"></div>
+    </header>
+
+    <div id="dbStatus">Connecting to Cloud... ⏳</div>
+    <div id="toastBox"></div>
+
+    <div class="main-container">
+        <div class="price-card">
+            
+            <div class="add-form">
+                <input type="text" id="newStockName" placeholder="Product Name (e.g. Dasi Mudhi)">
+                <input type="number" id="newStockQty" placeholder="Add Qty" style="max-width: 120px;">
+                <button class="btn-add" onclick="addStock()">+ Add</button>
+            </div>
+
+            <div class="list-header">📦 Current Stock List</div>
+            
+            <div id="stockList">
+                <!-- Stock load hoga yahan -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+            <h3 style="color:var(--gold); text-align:center; margin-top:0; margin-bottom: 15px;">Edit Stock Qty</h3>
+            <input type="hidden" id="editId">
+            <input type="text" id="editStockName" readonly style="color:var(--gold); background:rgba(0,0,0,0.4); font-weight:bold;">
+            <input type="number" id="editStockQty" placeholder="New Exact Qty">
+            <button class="btn-save" onclick="saveEditedStock()">Update Stock</button>
+        </div>
+    </div>
+
+    <script>
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+
+        function showToast(msg, type = 'info') {
+            let toastBox = document.getElementById('toastBox');
+            let toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            let icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
+            toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+            toastBox.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function autoCapitalize(text) { return text ? text.replace(/\b\w/g, char => char.toUpperCase()) : text; }
+
+        function normalizeData(data) {
+            if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
+            
+            let safePlaces = (data.places || []).filter(p => p != null);
+            let safeCustomers = (data.customers || []).filter(c => c != null);
+            let safeExpenses = (data.expenses || []).filter(e => e != null);
+            let safeStaff = (data.staff || []).filter(s => s != null);
+            let safeDefaultPrices = (data.defaultPrices || []).filter(p => p != null);
+            let safeStocks = (data.stocks || []).filter(s => s != null);
+            
+            safeStocks.forEach(s => { if(!s.id) s.id = generateId(); });
+
+            return {
+                places: safePlaces,
+                customers: safeCustomers,
+                defaultPrices: safeDefaultPrices,
+                expenses: safeExpenses,
+                staff: safeStaff,
+                stocks: safeStocks
+            };
+        }
+
+        let state = { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
+
+        dbRef.on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                state = normalizeData(snapshot.val());
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+                renderStock(); 
+            }
+        });
+
+        function saveToCloud() { 
+            dbRef.set(state).then(() => {
+                document.getElementById('dbStatus').innerHTML = "Live 🟢";
+                document.getElementById('dbStatus').style.color = "#4CAF50";
+            }).catch(() => { showToast("Save failed!", "error"); });
+        }
+
+        function addStock() {
+            let name = autoCapitalize(document.getElementById('newStockName').value.trim());
+            let qty = parseFloat(document.getElementById('newStockQty').value);
+            
+            if(!name || isNaN(qty)) {
+                showToast("Product ka naam aur quantity sahi se daalein!", "error"); return;
+            }
+
+            if(!state.stocks) state.stocks = [];
+            
+            let existing = state.stocks.find(s => s.name.toLowerCase() === name.toLowerCase());
+            
+            if(existing) {
+                existing.qty += qty; // Purane me naya add kar do
+                showToast("Existing Stock me add ho gaya!", "success");
+            } else {
+                state.stocks.push({ id: generateId(), name: name, qty: qty });
+                showToast("Naya Stock Add Ho Gaya!", "success");
+            }
+
+            document.getElementById('newStockName').value = "";
+            document.getElementById('newStockQty').value = "";
+            saveToCloud();
+        }
+
+        function deleteStock(id) {
+            if(confirm("Kya aap sach mein is stock ko hatana chahte hain?")) {
+                state.stocks = state.stocks.filter(p => p.id !== id);
+                showToast("Stock Delete Ho Gaya!", "success");
+                saveToCloud();
+            }
+        }
+
+        function openEditModal(id) {
+            let s = state.stocks.find(x => x.id === id);
+            if(s) {
+                document.getElementById('editId').value = id;
+                document.getElementById('editStockName').value = s.name;
+                document.getElementById('editStockQty').value = s.qty;
+                document.getElementById('editModal').style.display = 'flex';
+            }
+        }
+
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function saveEditedStock() {
+            let id = document.getElementById('editId').value;
+            let qty = parseFloat(document.getElementById('editStockQty').value);
+
+            if(isNaN(qty)) { showToast("Sahi quantity daalein!", "error"); return; }
+
+            let sIndex = state.stocks.findIndex(x => x.id === id);
+            if(sIndex > -1) {
+                state.stocks[sIndex].qty = qty;
+                showToast("Stock Update Ho Gaya!", "success");
+                closeEditModal();
+                saveToCloud();
+            }
+        }
+
+        function renderStock() {
+            let listDiv = document.getElementById('stockList');
+            let sList = state.stocks || [];
+
+            if (sList.length === 0) {
+                listDiv.innerHTML = '<div style="text-align:center; color:#aaa; font-style:italic; padding: 20px;">Abhi koi stock add nahi kiya gaya hai.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = sList.map((s) => {
+                // Agar negative hai to laal dikhega
+                let qtyColor = s.qty < 0 ? 'var(--danger)' : '#4da6ff';
+                
+                return `
+                <div class="price-item">
+                    <div class="prod-name">${s.name}</div>
+                    <div style="display:flex; align-items:center; gap:20px;">
+                        <div class="prod-rate" style="color:${qtyColor}">Qty: ${s.qty}</div>
+                        <div class="actions">
+                            <button class="btn-icon edit" onclick="openEditModal('${s.id}')" title="Edit Qty">✏️</button>
+                            <button class="btn-icon del" onclick="deleteStock('${s.id}')" title="Delete Stock">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('editModal').style.display === 'flex') { saveEditedStock(); } 
+                else {
+                    let act = document.activeElement;
+                    if(act.id === 'newStockName' || act.id === 'newStockQty') addStock();
+                }
+            } else if (e.key === 'Escape') { closeEditModal(); }
+        });
+
+    </script>
+</body>
+</html>
