@@ -31,11 +31,12 @@
         .back-btn:hover { background: var(--gold); color: var(--bg-maroon); }
 
         .main-container { display: flex; flex-direction: column; align-items: center; padding: 30px; flex: 1; overflow-y: auto; }
-        .price-card { background: rgba(0,0,0,0.3); border: 2px solid var(--gold); border-radius: 12px; width: 100%; max-width: 600px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .price-card { background: rgba(0,0,0,0.3); border: 2px solid var(--gold); border-radius: 12px; width: 100%; max-width: 650px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         
         .add-form { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         input { flex: 1; padding: 10px 12px; border: 2px solid var(--gold); background: #333; color: white; border-radius: 6px; font-size: 1.1rem; text-transform: capitalize; outline: none;}
         input:focus { border-color: #fff; }
+        input[type="password"] { text-transform: none; text-align: center; font-size: 1.5rem; letter-spacing: 5px; }
         .btn-add { background: var(--gold); color: var(--bg-maroon); border: none; border-radius: 6px; padding: 10px 20px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-add:hover { transform: scale(1.02); filter: brightness(1.1); }
         
@@ -48,20 +49,30 @@
         .prod-rate { font-size: 1.2rem; color: #4da6ff; font-weight: bold; display: flex; align-items: center; gap: 5px; }
         
         .actions { display: flex; gap: 10px; }
-        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; transition: 0.2s;}
+        .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; padding: 5px; transition: 0.2s;}
         .btn-icon:hover { transform: scale(1.2); }
         .btn-icon.edit { color: var(--edit); }
         .btn-icon.del { color: var(--danger); }
+        .btn-icon.hist { color: var(--success); }
 
         #dbStatus { font-size: 1rem; color: #ff9800; text-align: center; margin-top: 5px; font-weight: bold; }
         
-        /* Edit Modal */
+        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 350px; position: relative; }
-        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .modal-content { background: var(--bg-maroon); border: 3px solid var(--gold); padding: 25px; border-radius: 12px; width: 380px; position: relative; max-height: 80vh; display: flex; flex-direction: column;}
+        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 30px; color: var(--gold); cursor: pointer; font-weight: bold; transition: 0.2s; z-index: 10;}
         .close-btn:hover { color: var(--danger); transform: scale(1.1); }
         .btn-save { width: 100%; padding: 12px; background: var(--gold); border: none; cursor: pointer; font-weight: bold; color: var(--bg-maroon); margin-top: 15px; font-size: 1.1rem; border-radius: 6px; transition: 0.2s;}
         .btn-save:hover { filter: brightness(1.1); }
+
+        /* History Styling */
+        .history-list { overflow-y: auto; padding-right: 5px; margin-top: 15px; flex: 1;}
+        .history-row { background: rgba(0,0,0,0.3); border: 1px solid var(--gold); padding: 10px; margin-bottom: 8px; border-radius: 6px; font-size: 0.95rem; line-height: 1.4;}
+        .history-time { font-size: 0.85rem; color: #aaa; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 3px;}
+        .history-log { color: var(--white); font-weight: bold;}
+        .history-log.added { color: var(--success); }
+        .history-log.deduct { color: var(--danger); }
+        .history-log.edit { color: var(--edit); }
 
         #toastBox { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
         .toast { background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: fadein 0.3s, fadeout 0.3s 2.7s forwards; border-left: 5px solid var(--gold); }
@@ -70,6 +81,10 @@
         
         @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
         @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -101,11 +116,22 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
+    <div id="passModal" class="modal">
+        <div class="modal-content" style="width: 320px;">
+            <span class="close-btn" onclick="closePassModal()">&times;</span>
+            <h3 style="color:var(--danger); text-align:center; margin-top:0;">🔒 Security Check</h3>
+            <p style="text-align:center; color:#ccc; margin-top:0;">Edit/Delete karne ke liye password daalein</p>
+            <input type="password" id="adminPass" placeholder="* * *">
+            <button class="btn-save" onclick="verifyPassword()" style="background:var(--danger); color:white;">Unlock</button>
+        </div>
+    </div>
+
     <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeEditModal()">&times;</span>
-            <h3 style="color:var(--gold); text-align:center; margin-top:0; margin-bottom: 15px;">Edit Stock Qty</h3>
+            <h3 style="color:var(--gold); text-align:center; margin-top:0; margin-bottom: 15px;">✏️ Edit Stock Qty</h3>
             <input type="hidden" id="editId">
             <input type="text" id="editStockName" readonly style="color:var(--gold); background:rgba(0,0,0,0.4); font-weight:bold;">
             <input type="number" id="editStockQty" placeholder="New Exact Qty">
@@ -113,9 +139,20 @@
         </div>
     </div>
 
-    <script>
-        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <span class="close-btn" onclick="closeHistoryModal()">&times;</span>
+            <h3 style="color:var(--gold); text-align:center; margin-top:0; border-bottom:1px dashed var(--gold); padding-bottom:10px;" id="histTitle">📜 Stock History</h3>
+            <div class="history-list" id="historyContent">
+                <!-- History Items -->
+            </div>
+        </div>
+    </div>
 
+    <script>
+        // Utilities
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
         function showToast(msg, type = 'info') {
             let toastBox = document.getElementById('toastBox');
             let toast = document.createElement('div');
@@ -125,33 +162,35 @@
             toastBox.appendChild(toast);
             setTimeout(() => { toast.remove(); }, 3000);
         }
-
         function autoCapitalize(text) { return text ? text.replace(/\b\w/g, char => char.toUpperCase()) : text; }
+        
+        function getTimeString() {
+            return new Date().toLocaleString('en-IN', { hour12: true, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+        }
 
+        // Data Normalization (Safely initializing history array)
         function normalizeData(data) {
             if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
             
-            let safePlaces = (data.places || []).filter(p => p != null);
-            let safeCustomers = (data.customers || []).filter(c => c != null);
-            let safeExpenses = (data.expenses || []).filter(e => e != null);
-            let safeStaff = (data.staff || []).filter(s => s != null);
-            let safeDefaultPrices = (data.defaultPrices || []).filter(p => p != null);
             let safeStocks = (data.stocks || []).filter(s => s != null);
-            
-            safeStocks.forEach(s => { if(!s.id) s.id = generateId(); });
+            safeStocks.forEach(s => { 
+                if(!s.id) s.id = generateId(); 
+                if(!s.history) s.history = []; // History array zaroori hai
+            });
 
             return {
-                places: safePlaces,
-                customers: safeCustomers,
-                defaultPrices: safeDefaultPrices,
-                expenses: safeExpenses,
-                staff: safeStaff,
+                places: (data.places || []).filter(p => p != null),
+                customers: (data.customers || []).filter(c => c != null),
+                defaultPrices: (data.defaultPrices || []).filter(p => p != null),
+                expenses: (data.expenses || []).filter(e => e != null),
+                staff: (data.staff || []).filter(s => s != null),
                 stocks: safeStocks
             };
         }
 
         let state = { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
 
+        // Firebase Sync
         dbRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 state = normalizeData(snapshot.val());
@@ -168,6 +207,36 @@
             }).catch(() => { showToast("Save failed!", "error"); });
         }
 
+        // ==========================================
+        // PASSWORD PROTECTION LOGIC
+        // ==========================================
+        let pendingAction = null;
+        let pendingTargetId = null;
+
+        function requestAction(action, id) {
+            pendingAction = action;
+            pendingTargetId = id;
+            document.getElementById('adminPass').value = '';
+            document.getElementById('passModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('adminPass').focus(), 100);
+        }
+
+        function closePassModal() { document.getElementById('passModal').style.display = 'none'; }
+
+        function verifyPassword() {
+            let pass = document.getElementById('adminPass').value;
+            if (pass === '258') {
+                closePassModal();
+                if (pendingAction === 'edit') { openEditModal(pendingTargetId); } 
+                else if (pendingAction === 'delete') { executeDelete(pendingTargetId); }
+            } else {
+                showToast("Galat Password! Access Denied.", "error");
+            }
+        }
+
+        // ==========================================
+        // ADD / EDIT / DELETE STOCK
+        // ==========================================
         function addStock() {
             let name = autoCapitalize(document.getElementById('newStockName').value.trim());
             let qty = parseFloat(document.getElementById('newStockQty').value);
@@ -177,14 +246,26 @@
             }
 
             if(!state.stocks) state.stocks = [];
-            
             let existing = state.stocks.find(s => s.name.toLowerCase() === name.toLowerCase());
+            let timeNow = getTimeString();
             
             if(existing) {
-                existing.qty += qty; // Purane me naya add kar do
+                let oldQty = existing.qty;
+                existing.qty += qty; 
+                existing.history.push({
+                    id: generateId(), 
+                    time: timeNow, 
+                    log: `Added +${qty} qty (Old: ${oldQty} ➡️ New: ${existing.qty})`,
+                    type: 'added'
+                });
                 showToast("Existing Stock me add ho gaya!", "success");
             } else {
-                state.stocks.push({ id: generateId(), name: name, qty: qty });
+                state.stocks.push({ 
+                    id: generateId(), 
+                    name: name, 
+                    qty: qty,
+                    history: [{ id: generateId(), time: timeNow, log: `Initial Stock Added: ${qty}`, type: 'added' }]
+                });
                 showToast("Naya Stock Add Ho Gaya!", "success");
             }
 
@@ -193,8 +274,8 @@
             saveToCloud();
         }
 
-        function deleteStock(id) {
-            if(confirm("Kya aap sach mein is stock ko hatana chahte hain?")) {
+        function executeDelete(id) {
+            if(confirm("Kya aap sach mein is stock item ko hatana chahte hain?")) {
                 state.stocks = state.stocks.filter(p => p.id !== id);
                 showToast("Stock Delete Ho Gaya!", "success");
                 saveToCloud();
@@ -208,9 +289,9 @@
                 document.getElementById('editStockName').value = s.name;
                 document.getElementById('editStockQty').value = s.qty;
                 document.getElementById('editModal').style.display = 'flex';
+                setTimeout(() => document.getElementById('editStockQty').focus(), 100);
             }
         }
-
         function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
 
         function saveEditedStock() {
@@ -221,13 +302,53 @@
 
             let sIndex = state.stocks.findIndex(x => x.id === id);
             if(sIndex > -1) {
+                let oldQty = state.stocks[sIndex].qty;
                 state.stocks[sIndex].qty = qty;
+                
+                // History me record save karo
+                let timeNow = getTimeString();
+                state.stocks[sIndex].history.push({
+                    id: generateId(),
+                    time: timeNow,
+                    log: `Admin Edited Qty (Old: ${oldQty} ➡️ New: ${qty})`,
+                    type: 'edit'
+                });
+
                 showToast("Stock Update Ho Gaya!", "success");
                 closeEditModal();
                 saveToCloud();
             }
         }
 
+        // ==========================================
+        // HISTORY VIEWER
+        // ==========================================
+        function openHistoryModal(id) {
+            let s = state.stocks.find(x => x.id === id);
+            if(!s) return;
+            
+            document.getElementById('histTitle').innerHTML = `📜 History: ${s.name}`;
+            let histContent = document.getElementById('historyContent');
+            
+            let hList = s.history || [];
+            if(hList.length === 0) {
+                histContent.innerHTML = '<div style="text-align:center; padding:30px; color:#aaa;">Koi history available nahi hai.</div>';
+            } else {
+                histContent.innerHTML = [...hList].reverse().map(h => {
+                    return `
+                    <div class="history-row">
+                        <div class="history-time">⏱️ ${h.time}</div>
+                        <div class="history-log ${h.type || 'edit'}">${h.log}</div>
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+        function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+        // ==========================================
+        // RENDER UI
+        // ==========================================
         function renderStock() {
             let listDiv = document.getElementById('stockList');
             let sList = state.stocks || [];
@@ -237,32 +358,37 @@
                 return;
             }
 
-            listDiv.innerHTML = sList.map((s) => {
-                // Agar negative hai to laal dikhega
-                let qtyColor = s.qty < 0 ? 'var(--danger)' : '#4da6ff';
-                
+            listDiv.innerHTML = sList.slice().reverse().map((s) => {
+                let qtyColor = s.qty <= 0 ? 'var(--danger)' : '#4da6ff';
                 return `
                 <div class="price-item">
                     <div class="prod-name">${s.name}</div>
-                    <div style="display:flex; align-items:center; gap:20px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
                         <div class="prod-rate" style="color:${qtyColor}">Qty: ${s.qty}</div>
                         <div class="actions">
-                            <button class="btn-icon edit" onclick="openEditModal('${s.id}')" title="Edit Qty">✏️</button>
-                            <button class="btn-icon del" onclick="deleteStock('${s.id}')" title="Delete Stock">🗑️</button>
+                            <button class="btn-icon hist" onclick="openHistoryModal('${s.id}')" title="View History">📜</button>
+                            <button class="btn-icon edit" onclick="requestAction('edit', '${s.id}')" title="Edit Qty">✏️</button>
+                            <button class="btn-icon del" onclick="requestAction('delete', '${s.id}')" title="Delete Stock">🗑️</button>
                         </div>
                     </div>
                 </div>
             `}).join('');
         }
 
+        // ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                if (document.getElementById('editModal').style.display === 'flex') { saveEditedStock(); } 
-                else {
+                if (document.getElementById('passModal').style.display === 'flex') { verifyPassword(); }
+                else if (document.getElementById('editModal').style.display === 'flex') { saveEditedStock(); } 
+                else if (document.getElementById('historyModal').style.display === 'none') {
                     let act = document.activeElement;
                     if(act.id === 'newStockName' || act.id === 'newStockQty') addStock();
                 }
-            } else if (e.key === 'Escape') { closeEditModal(); }
+            } else if (e.key === 'Escape') { 
+                closeEditModal(); closePassModal(); closeHistoryModal();
+            }
         });
 
     </script>
