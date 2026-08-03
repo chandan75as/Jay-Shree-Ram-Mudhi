@@ -147,7 +147,7 @@
             <div class="dropdown-container">
                 <button class="header-btn" onclick="toggleMenu('mainDrop', event)">☰</button>
                 <div id="mainDrop" class="dropdown right-drop">
-                    <a href="stock.html">📦 Stock Management</a> <!-- NEW STOCK OPTION -->
+                    <a href="stock.html">📦 Stock Management</a>
                     <a href="price.html">Our Price List</a>
                     <a href="staffmanagement.html">Staff Management</a>
                     <a href="calculation.html">Total Calculation</a>
@@ -215,7 +215,11 @@
             return text.replace(/\b\w/g, char => char.toUpperCase());
         }
 
-        // 🔥 FIX: Pura database safe rakhne ke liye Normalize Function update kiya gaya
+        function getTimeString() {
+            return new Date().toLocaleString('en-IN', { hour12: true, day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+        }
+
+        // Pura database safe rakhne ke liye Normalize Function
         function normalizeData(data) {
             if(!data) return { places: [], customers: [], defaultPrices: [], expenses: [], staff: [], stocks: [] };
             
@@ -269,7 +273,6 @@
             }
         });
 
-        // 🔥 FIX: Ab Pura State Save Hoga (Kharcha aur Staff delete nahi hoga)
         function saveToCloud() { 
             dbRef.set(state).then(() => {
                 document.getElementById('dbStatus').innerHTML = "Live 🟢";
@@ -349,6 +352,16 @@
                     </div>
                 `).join('');
                 
+                // 🔥 NEW DROPDOWN LOGIC FOR PERSONAL PRICE LIST
+                let globalProdOptions = '<option value="" disabled selected>-- Select Product --</option>';
+                if (state.defaultPrices && state.defaultPrices.length > 0) {
+                    state.defaultPrices.forEach(p => {
+                        globalProdOptions += `<option value="${p.prodName}">${p.prodName} (Global: ₹${p.rate})</option>`;
+                    });
+                } else {
+                    globalProdOptions = '<option value="" disabled selected>Pehle Global Price List banayein!</option>';
+                }
+
                 content = `${closeBtnHTML}
                     <h3 style="margin-bottom:5px;">📜 ${c.name} ki Price List</h3>
                     <p style="text-align:center; font-size:0.85rem; color:#aaa; margin-top:0;">Agar yahan khali raha toh bill mein Global Price List aayega.</p>
@@ -357,8 +370,10 @@
                     </div>
                     <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px dashed var(--gold);">
                         <h4 style="margin:0 0 10px 0; color:var(--gold); text-align:center;">Naya Product Rate Set Karein</h4>
-                        <input id="newPName" placeholder="Product Name (e.g., Special Mudhi)">
-                        <input id="newPRate" type="number" placeholder="Rate / Price (₹)">
+                        <select id="newPName">
+                            ${globalProdOptions}
+                        </select>
+                        <input id="newPRate" type="number" placeholder="Personal Rate / Price (₹)">
                         <button id="priceSaveBtn" class="btn-save" style="margin-top:5px; padding:10px;" onclick="addPrice('${targetId}')">Save Rate</button>
                     </div>`;
             }
@@ -517,10 +532,11 @@
         }
 
         function addPrice(custId) {
-            let n = autoCapitalize(document.getElementById('newPName').value.trim());
+            // 🔥 N is now taken from dropdown (select) value
+            let n = document.getElementById('newPName').value;
             let r = parseFloat(document.getElementById('newPRate').value);
             
-            if(!n) { showToast("Product ka naam likhein!", "error"); return; }
+            if(!n) { showToast("Product chunein!", "error"); return; }
             if(isNaN(r) || r < 0) { showToast("Sahi rate (₹) dalein!", "error"); return; }
             
             let c = state.customers.find(x => x.id === custId);
@@ -532,6 +548,11 @@
                 p.rate = r;
                 showToast("Rate update ho gaya!", "success");
             } else {
+                // Prevent duplicate personal price for same product
+                let existing = c.priceList.find(x => x.prodName === n);
+                if(existing) {
+                    showToast("Is product ka rate pehle se add hai!", "error"); return;
+                }
                 c.priceList.push({ id: generateId(), prodName: n, rate: r });
                 showToast("Naya rate save ho gaya!", "success");
             }
@@ -632,10 +653,11 @@
             }
         }
 
-        // 🔥 FIX: Bill banne ke baad Stock Automatic Deduct Hoga
+        // 🔥 FIX: Bill banne ke baad Stock Deduct hoga AND History mein add hoga!
         function addTrans(custId) { 
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
+            let c = state.customers.find(x => x.id === custId);
             
             let timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
             let prodString = tempBillItems.map(i => `${i.name} (x${i.qty})`).join(', ');
@@ -652,19 +674,31 @@
                 }
             }
             
-            // ===== STOCK DEDUCTION LOGIC =====
+            // ===== STOCK DEDUCTION LOGIC WITH HISTORY =====
             if(tempBillItems.length > 0 && state.stocks) {
+                let fullTime = getTimeString();
+                
                 tempBillItems.forEach(item => {
                     let stockIndex = state.stocks.findIndex(s => s.name.toLowerCase() === item.name.toLowerCase());
                     if(stockIndex !== -1) {
+                        let oldQty = state.stocks[stockIndex].qty;
                         state.stocks[stockIndex].qty -= item.qty; // Minus ho jayega
+                        
+                        // History me deduct update karo
+                        if(!state.stocks[stockIndex].history) state.stocks[stockIndex].history = [];
+                        
+                        state.stocks[stockIndex].history.push({
+                            id: generateId(),
+                            time: fullTime,
+                            log: `Billed to ${c.name}: -${item.qty} Qty (Old: ${oldQty} ➡️ New: ${state.stocks[stockIndex].qty})`,
+                            type: 'deduct' // Laal rang me dikhega
+                        });
                     }
                 });
             }
             // =================================
 
             let today = new Date().toLocaleDateString('en-GB');
-            let c = state.customers.find(x => x.id === custId);
             
             if(!c.history) c.history = [];
             let existingEntry = c.history.find(h => h.date === today);
