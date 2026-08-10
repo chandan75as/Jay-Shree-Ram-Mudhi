@@ -257,7 +257,7 @@
         
         let tempBillItems = [];
         let tempBillTotal = 0;
-        let tempPrevDue = 0; // Pichla hisaab yahan save hoga
+        let tempPrevDue = 0; 
         let editingPriceId = null;
 
         // Firebase Sync (Live Connection)
@@ -383,7 +383,6 @@
                 
                 let c = state.customers.find(x => x.id === targetId);
                 
-                // Pichla hisaab calculate karein
                 if (c.history) {
                     c.history.forEach(h => {
                         tempPrevDue += (parseFloat(h.amt) || 0) - (parseFloat(h.paid) || 0);
@@ -400,6 +399,8 @@
                     let options = pList.map((p, i) => `<option value="${i}">${p.prodName} (₹${p.rate})</option>`).join('');
                     
                     let prevDueUI = '';
+                    let finalAmtUI = ''; 
+                    
                     if (tempPrevDue > 0) {
                         prevDueUI = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:rgba(255,77,77,0.15); padding:10px; border-radius:6px; border:1px solid var(--danger);">
                                         <span style="font-size:1.1rem; color:var(--danger); font-weight:bold;">Pichla Baki (Due):</span>
@@ -410,6 +411,14 @@
                                         <span style="font-size:1.1rem; color:var(--success); font-weight:bold;">Pichla Advance:</span>
                                         <span style="font-size:1.3rem; font-weight:bold; color:var(--success);">₹${Math.abs(tempPrevDue)}</span>
                                      </div>`;
+                    }
+
+                    // Agar pichla due ya advance hai tabhi ye "Total (Bill + Pichla)" dikhega
+                    if (tempPrevDue !== 0) {
+                        finalAmtUI = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                        <span style="font-size:1.1rem; color:#4da6ff; font-weight:bold;">Total (Bill + Pichla):</span>
+                                        <input id="finalAmt" value="₹0" readonly style="width:140px; margin:0; font-weight:bold; border-color:#4da6ff;">
+                                      </div>`;
                     }
                     
                     content = `${closeBtnHTML}<h3>New Bill <br><span style="font-size:0.85rem; color:#aaa; font-weight:normal;">(Using: ${listType})</span></h3>
@@ -436,10 +445,7 @@
                                    <input id="amt" value="₹0" readonly style="width:140px; margin:0;">
                                </div>
                                
-                               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                   <span style="font-size:1.1rem; color:#4da6ff; font-weight:bold;">Total (Bill + Pichla):</span>
-                                   <input id="finalAmt" value="₹0" readonly style="width:140px; margin:0; font-weight:bold; border-color:#4da6ff;">
-                               </div>
+                               ${finalAmtUI}
                                
                                <div style="display:flex; justify-content:space-between; align-items:center;">
                                    <span style="font-size:1.1rem;">Jama Amount (Paid):</span>
@@ -552,19 +558,21 @@
                 cartDiv.scrollTop = cartDiv.scrollHeight;
             }
             
-            // Update Final Amount (Total + Pichla)
-            let finalPayable = tempPrevDue + tempBillTotal;
+            // Update Final Amount (Total + Pichla) agar box mojood hai
             let finalAmtInput = document.getElementById('finalAmt');
-            
-            if (finalPayable > 0) {
-                finalAmtInput.value = "₹" + finalPayable + " (Due)";
-                finalAmtInput.style.color = "var(--danger)";
-            } else if (finalPayable < 0) {
-                finalAmtInput.value = "₹" + Math.abs(finalPayable) + " (Adv)";
-                finalAmtInput.style.color = "var(--success)";
-            } else {
-                finalAmtInput.value = "₹0";
-                finalAmtInput.style.color = "white";
+            if (finalAmtInput) {
+                let finalPayable = tempPrevDue + tempBillTotal;
+                
+                if (finalPayable > 0) {
+                    finalAmtInput.value = "₹" + finalPayable + " (Due)";
+                    finalAmtInput.style.color = "var(--danger)";
+                } else if (finalPayable < 0) {
+                    finalAmtInput.value = "₹" + Math.abs(finalPayable) + " (Adv)";
+                    finalAmtInput.style.color = "var(--success)";
+                } else {
+                    finalAmtInput.value = "₹0";
+                    finalAmtInput.style.color = "white";
+                }
             }
         }
 
@@ -696,7 +704,6 @@
             
             let timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
             
-            // New Item-wise string logic
             let prodString = tempBillItems.map(i => `▪️ ${i.name} (x${i.qty}) = ₹${i.total}`).join('\n');
             
             if(prodString !== "") {
@@ -753,13 +760,9 @@
             // ===== 🟢 WHATSAPP MESSAGE FORMATTING 🟢 =====
             if (c.phone && c.phone.length === 10) {
                 
-                // Pichla Hisaab ka text
                 let prevText = tempPrevDue > 0 ? `Pichla Baki: ₹${tempPrevDue}` : (tempPrevDue < 0 ? `Pichla Advance: ₹${Math.abs(tempPrevDue)}` : `Pichla Baki: ₹0`);
-                
-                // Aaj ke items list text
                 let itemsList = tempBillItems.length > 0 ? tempBillItems.map(i => `▪️ ${i.name} (x${i.qty}) = ₹${i.total}`).join('\n') : 'Cash Deposit';
 
-                // Naya Final Hisaab calculate karna
                 let totalBill = 0, totalPaid = 0;
                 c.history.forEach(h => {
                     totalBill += parseFloat(h.amt) || 0;
@@ -924,4 +927,4 @@
         }
     </script>
 </body>
-</html>
+</html
