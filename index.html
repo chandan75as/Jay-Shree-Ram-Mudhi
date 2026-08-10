@@ -71,8 +71,18 @@
         .price-corner-btn { position: absolute; right: 12px; top: 12px; font-size: 26px; background: none; border: none; cursor: pointer; transition: 0.2s; z-index: 2; }
         .price-corner-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--gold)); }
         
-        /* Corner Due Display */
-        .due-corner { position: absolute; right: 12px; bottom: 12px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 6px; z-index: 2; border: 1px solid;}
+        /* 🔥 FIXED OVERLAY BUG: Removed Absolute Positioning, added inline flow */
+        .due-corner { 
+            display: inline-block; 
+            width: max-content;
+            margin-top: 10px;
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            background: rgba(0,0,0,0.7); 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            border: 1px solid;
+        }
         .place-tag { font-size: 0.85rem; color: #ccc; margin-left: 8px; font-weight: normal; }
 
         /* Date Rows */
@@ -314,10 +324,13 @@
             document.getElementById('passModal').style.display = 'none'; 
         }
 
+        // 🔥 BUG FIXED: Password comparison ab case-insensitive (chota-bada letter) dono handle karega
         function verifyPassword() {
-            let pass = document.getElementById('adminPass').value;
-            // my.js se ADMIN_PASSWORD check karega, agar define nahi hai toh 258 chalega
-            let correctPass = typeof ADMIN_PASSWORD !== 'undefined' ? ADMIN_PASSWORD : '258';
+            let pass = document.getElementById('adminPass').value.trim().toLowerCase();
+            
+            // my.js se ADMIN_PASSWORD check karega, agar define nahi hai ya cache issue hai toh 258 lega
+            let storedPass = typeof ADMIN_PASSWORD !== 'undefined' ? ADMIN_PASSWORD : '258';
+            let correctPass = storedPass.toString().trim().toLowerCase();
             
             if (pass === correctPass) {
                 closePassModal();
@@ -632,7 +645,6 @@
             }
         }
 
-        // --- Other DB Functions remain identical ---
         function editPriceForm(custId, priceId) {
             let c = state.customers.find(x => x.id === custId);
             let p = c.priceList.find(x => x.id === priceId);
@@ -932,7 +944,7 @@
                     <div class="cust-header">
                         <button class="price-corner-btn" onclick="openModal('priceList', '${c.id}')" title="Price List Setup">📜</button>
                         <div style="font-size: 2rem; font-weight:bold; margin-bottom: 5px; max-width:85%;">👤 ${c.name}</div>
-                        <div style="font-size: 1rem; color: #ccc; margin-bottom: 25px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}${nearbyText}</div>
+                        <div style="font-size: 1rem; color: #ccc; margin-bottom: 5px;">📞 ${c.phone || 'N/A'} &nbsp;|&nbsp; 📍 ${c.place}${nearbyText}</div>
                         ${dueStatusHTML}
                     </div>
                     <div style="padding: 10px 0;">
@@ -952,7 +964,6 @@
         }
 
         window.addEventListener('keydown', function(e) {
-            // Updated Keydown Handler for Password Check Modal
             if (document.getElementById('passModal').style.display === 'flex') {
                 if (e.key === 'Enter') {
                     verifyPassword();
