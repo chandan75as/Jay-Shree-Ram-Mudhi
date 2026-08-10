@@ -23,3 +23,9 @@ const database = firebase.database();
 const dbRef = database.ref('appData/mainState');
 
 console.log("Firebase Connected via my.js");
+
+// ==========================================
+// SECURITY CONFIGURATION
+// ==========================================
+// Yahan aapka admin password set kiya gaya hai
+const ADMIN_PASSWORD = "Jay Shree Ram";
