@@ -352,7 +352,7 @@
                     </div>
                 `).join('');
                 
-                // 🔥 NEW DROPDOWN LOGIC FOR PERSONAL PRICE LIST
+                // NAYA DROPDOWN LOGIC
                 let globalProdOptions = '<option value="" disabled selected>-- Select Product --</option>';
                 if (state.defaultPrices && state.defaultPrices.length > 0) {
                     state.defaultPrices.forEach(p => {
@@ -532,7 +532,6 @@
         }
 
         function addPrice(custId) {
-            // 🔥 N is now taken from dropdown (select) value
             let n = document.getElementById('newPName').value;
             let r = parseFloat(document.getElementById('newPRate').value);
             
@@ -548,7 +547,6 @@
                 p.rate = r;
                 showToast("Rate update ho gaya!", "success");
             } else {
-                // Prevent duplicate personal price for same product
                 let existing = c.priceList.find(x => x.prodName === n);
                 if(existing) {
                     showToast("Is product ka rate pehle se add hai!", "error"); return;
@@ -595,9 +593,7 @@
         function deletePlace(p) {
             if(confirm(`Kya aap sach mein '${p}' ko delete karna chahte hain?\nYahan ke sabhi customers 'Uncategorized' mein chale jayenge.`)) {
                 state.places = state.places.filter(x => x !== p);
-                
                 if(!state.places.includes("Uncategorized")) { state.places.push("Uncategorized"); }
-                
                 state.customers.forEach(c => { if(c.place === p) c.place = "Uncategorized"; });
                 
                 if(activePlace === p) { activePlace = null; activeCustomerId = null; }
@@ -653,7 +649,9 @@
             }
         }
 
-        // 🔥 FIX: Bill banne ke baad Stock Deduct hoga AND History mein add hoga!
+        // ==========================================
+        // ADD TRANSACTION (BILL) WITH WHATSAPP LINK
+        // ==========================================
         function addTrans(custId) { 
             let paid = parseFloat(document.getElementById('paid').value) || 0;
             let amt = tempBillTotal;
@@ -674,7 +672,7 @@
                 }
             }
             
-            // ===== STOCK DEDUCTION LOGIC WITH HISTORY =====
+            // ===== STOCK DEDUCTION LOGIC =====
             if(tempBillItems.length > 0 && state.stocks) {
                 let fullTime = getTimeString();
                 
@@ -682,47 +680,65 @@
                     let stockIndex = state.stocks.findIndex(s => s.name.toLowerCase() === item.name.toLowerCase());
                     if(stockIndex !== -1) {
                         let oldQty = state.stocks[stockIndex].qty;
-                        state.stocks[stockIndex].qty -= item.qty; // Minus ho jayega
+                        state.stocks[stockIndex].qty -= item.qty; 
                         
-                        // History me deduct update karo
                         if(!state.stocks[stockIndex].history) state.stocks[stockIndex].history = [];
                         
                         state.stocks[stockIndex].history.push({
                             id: generateId(),
                             time: fullTime,
                             log: `Billed to ${c.name}: -${item.qty} Qty (Old: ${oldQty} ➡️ New: ${state.stocks[stockIndex].qty})`,
-                            type: 'deduct' // Laal rang me dikhega
+                            type: 'deduct'
                         });
                     }
                 });
             }
-            // =================================
 
+            // ===== ADD HISTORY =====
             let today = new Date().toLocaleDateString('en-GB');
-            
             if(!c.history) c.history = [];
             let existingEntry = c.history.find(h => h.date === today);
             
             if(existingEntry) {
-                if (!existingEntry.prod) {
-                    existingEntry.prod = prodString; 
-                } else {
-                    existingEntry.prod = existingEntry.prod + "\n" + prodString; 
-                }
+                if (!existingEntry.prod) existingEntry.prod = prodString; 
+                else existingEntry.prod = existingEntry.prod + "\n" + prodString; 
+                
                 existingEntry.amt = (parseFloat(existingEntry.amt) || 0) + amt;
                 existingEntry.paid = (parseFloat(existingEntry.paid) || 0) + paid;
             } else {
                 c.history.push({
-                    id: generateId(),
-                    prod: prodString, 
-                    amt: amt, 
-                    paid: paid, 
-                    date: today
+                    id: generateId(), prod: prodString, amt: amt, paid: paid, date: today
                 }); 
             }
             
             showToast("Hisaab Save & Stock Updated! ✅", "success");
             saveToCloud(); closeModal();
+            
+            // ===== 🟢 NEW WHATSAPP LOGIC START 🟢 =====
+            if (c.phone && c.phone.length === 10) {
+                // Pichla pura hisaab calculate karo (naye bill ko mila kar)
+                let totalBill = 0, totalPaid = 0;
+                c.history.forEach(h => {
+                    totalBill += parseFloat(h.amt) || 0;
+                    totalPaid += parseFloat(h.paid) || 0;
+                });
+                let net = totalBill - totalPaid;
+                let netText = net > 0 ? `Baki (Due): ₹${net}` : (net < 0 ? `Advance Jama: ₹${Math.abs(net)}` : `Hisaab Clear: ₹0`);
+
+                let itemsList = tempBillItems.length > 0 ? tempBillItems.map(i => `${i.name} (x${i.qty})`).join(', ') : 'Cash Deposit';
+
+                let msg = `🧾 *Jay Shree Ram Mudhi* 🧾\n\nNamaste *${c.name}* ji,\nAapka aaj ka hisaab update ho gaya hai:\n\n🛍️ *Items:* ${itemsList}\n💵 *Bill Amount:* ₹${amt}\n💰 *Jama Kiya:* ₹${paid}\n\n📊 *Total Hisaab (Pichla mila kar):*\n*${netText}*\n\nDhanyawad! 🙏`;
+
+                let waUrl = `https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`;
+                // Browser popup block na kare, isliye tab open karte hain
+                window.open(waUrl, '_blank');
+            } else {
+                // Agar customer ka number nahi hai, toh chhota sa message dikha do
+                setTimeout(() => {
+                    showToast("Mobile no. nahi hai, WhatsApp msg skip kiya gaya.", "info");
+                }, 1000);
+            }
+            // ===== 🔴 NEW WHATSAPP LOGIC END 🔴 =====
         }
         
         function saveEditedTrans(custId, transId) {
